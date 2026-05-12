@@ -12,5 +12,9 @@ spring:
       ddl-auto: validate
 
   jwt:
-    secret:
-      key: ${JWT_SECRET_KEY}
+    admin:
+      secret: ${ADMIN_JWT_SECRET}
+      access-token-expiry: 1800000
+    creator:
+      secret: ${CREATOR_JWT_SECRET}
+      access-token-expiry: 1800000

@@ -52,3 +52,9 @@
 - `ApiResponse` 공통 응답 객체를 정리하고 성공/실패 응답 생성 메서드를 추가했다.
 - `ErrorCode`, `BusinessException`, `GlobalExceptionHandler`를 연결해 공통 예외 응답 처리 기반을 구성했다.
 - 입력 검증, 요청 파라미터, JSON 파싱, 비즈니스 예외를 일관된 응답 형식으로 반환하도록 정리했다.
+
+### JWT 인증 기반 추가
+
+- `JwtProvider`, `JwtProperties`, `JwtAuthenticationFilter`를 추가해 액세스 토큰 생성 및 검증 기반을 구성했다.
+- 크리에이터와 운영자 인증 주체를 구분하는 `AuthenticatedPrincipal`, 전용 `UserDetailsService`, 인증 프로바이더 구조를 추가했다.
+- 보안 예외 응답 처리를 위해 `SecurityResponseWriter`와 인증 관련 에러 코드를 정리하고 설정 값을 `application.yaml`에 반영했다.
