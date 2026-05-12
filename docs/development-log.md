@@ -46,3 +46,9 @@
 - 프로젝트 전용 Codex 커밋 스킬을 로컬 `.codex/skills/commit` 경로로 정리했다.
 - 스킬 이름을 `commit`으로 변경하고 저장소 커밋 규칙에 맞는 헤더와 본문 작성 흐름을 정리했다.
 - 커밋 수행 시 `docs/development-log.md`를 함께 갱신하도록 스킬 규칙을 추가했다.
+
+### 공통 응답 및 예외 처리 추가
+
+- `ApiResponse` 공통 응답 객체를 정리하고 성공/실패 응답 생성 메서드를 추가했다.
+- `ErrorCode`, `BusinessException`, `GlobalExceptionHandler`를 연결해 공통 예외 응답 처리 기반을 구성했다.
+- 입력 검증, 요청 파라미터, JSON 파싱, 비즈니스 예외를 일관된 응답 형식으로 반환하도록 정리했다.

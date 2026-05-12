@@ -1,0 +1,101 @@
+package com.liveclass.be_b.common.exception;
+
+import com.liveclass.be_b.common.response.ApiResponse;
+import com.liveclass.be_b.common.response.ErrorCode;
+import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.BindException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+
+@Slf4j
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+    /** 도메인 비즈니스 예외 */
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException e) {
+        log.warn(
+                "Business exception occurred: code={}, message={}",
+                e.getErrorCode().getCode(),
+                e.getMessage(),
+                e
+        );
+        return ApiResponse.fail(e.getErrorCode());
+    }
+
+    /** @RequestBody @Valid 실패 */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMethodArgumentNotValid(MethodArgumentNotValidException e) {
+        var fieldErrors = e.getBindingResult().getFieldErrors();
+        String message = fieldErrors.stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .findFirst()
+                .orElse(ErrorCode.INVALID_INPUT.getMessage());
+        return ApiResponse.fail(ErrorCode.INVALID_INPUT, message);
+    }
+
+    /** @ModelAttribute 바인딩 실패 */
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBindException(BindException e) {
+        var fieldErrors = e.getBindingResult().getFieldErrors();
+        String message = fieldErrors.stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .findFirst()
+                .orElse(ErrorCode.INVALID_INPUT.getMessage());
+        return ApiResponse.fail(ErrorCode.INVALID_INPUT, message);
+    }
+
+    /** @Validated 컨트롤러에서 @RequestParam/@PathVariable 검증 실패 (Spring Boot 3.2+) */
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleHandlerMethodValidation(HandlerMethodValidationException e) {
+        var validationResults = e.getParameterValidationResults();
+        String message = validationResults.stream()
+                .flatMap(result -> {
+                    var resolvableErrors = result.getResolvableErrors();
+                    return resolvableErrors.stream();
+                })
+                .map(error -> error.getDefaultMessage())
+                .findFirst()
+                .orElse(ErrorCode.INVALID_INPUT.getMessage());
+        return ApiResponse.fail(ErrorCode.INVALID_INPUT, message);
+    }
+
+    /** @Validated 서비스 레이어 검증 실패 */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConstraintViolation(ConstraintViolationException e) {
+        var violations = e.getConstraintViolations();
+        String message = violations.stream()
+                .map(v -> {
+                    String path = v.getPropertyPath().toString();
+                    String field = path.contains(".") ? path.substring(path.lastIndexOf('.') + 1) : path;
+                    return field + ": " + v.getMessage();
+                })
+                .findFirst()
+                .orElse(ErrorCode.INVALID_INPUT.getMessage());
+        return ApiResponse.fail(ErrorCode.INVALID_INPUT, message);
+    }
+
+    /** JSON 파싱 실패 (잘못된 타입, 필드명 오류 등) */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
+        return ApiResponse.fail(ErrorCode.INVALID_INPUT, "요청 본문을 읽을 수 없습니다.");
+    }
+
+    /** 필수 @RequestParam 누락 */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMissingServletRequestParameter(MissingServletRequestParameterException e) {
+        return ApiResponse.fail(ErrorCode.INVALID_INPUT, e.getParameterName() + " 파라미터가 필요합니다.");
+    }
+
+    /** 그 외 모든 예외 */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
+        log.error("Unhandled exception occurred", e);
+        return ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR);
+    }
+}
