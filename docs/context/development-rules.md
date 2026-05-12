@@ -20,15 +20,15 @@
 - 하나의 기능 단위를 나타낸다.
 - 여러 `Service`를 조합해 하나의 유스케이스를 완성한다.
 - `Controller`로부터 `Request`를 받고 최종 `Response`를 반환한다.
-- `Service`에 데이터를 전달할 때는 `Command`로 변환해서 전달한다.
 - `Request`를 `Service`로 직접 넘기지 않는다.
+- `Service`에는 필요한 값만 직접 인자로 전달하거나, 정말 필요한 경우에만 별도 서비스 전용 DTO를 사용한다.
 
 ### Service
 - 도메인 로직 또는 개별 작업 단위를 수행한다.
 - 필요한 경우 `Repository`를 통해 데이터를 조회하거나 저장한다.
-- 처리 결과는 `Result` 형태로 `UseCase`에 반환한다.
 - 다른 계층의 HTTP 요청/응답 모델을 알지 않아야 한다.
 - 순환 참조 방지를 위해 다른 `Service`를 의존하지 않는다.
+- 웹 계층의 `Request`, `Response` DTO를 직접 의존하지 않는다.
 
 ### Repository
 - 영속성 처리만 담당한다.
@@ -36,11 +36,11 @@
 
 ## 객체 전달 규칙
 - `Controller -> UseCase`: `Request`
-- `UseCase -> Service`: `Command`
-- `Service -> UseCase`: `Result`
+- `UseCase -> Service`: 필요한 값 또는 서비스 전용 DTO
+- `Service -> UseCase`: 도메인 객체, 원시값, 또는 서비스 전용 반환 객체
 - `UseCase -> Controller`: `Response`
 
-즉 `Request`, `Command`, `Result`, `Response`의 역할을 혼용하지 않는다.
+즉 웹 계층 DTO와 서비스 계층 입력/반환 모델을 혼용하지 않는다.
 
 ## 트랜잭션 규칙
 - 트랜잭션 경계는 기본적으로 `UseCase`에 둔다.
@@ -54,5 +54,6 @@
 - `UseCase`가 `Repository`를 직접 호출하지 않는다.
 - `Service`가 다른 `Service`를 직접 호출하지 않는다.
 - `Service`는 `Request`, `Response`에 의존하지 않는다.
+- 불필요한 `Command`, `Result` 보일러플레이트는 만들지 않는다.
 - 하나의 `UseCase`는 하나의 기능을 명확하게 설명할 수 있어야 한다.
 - 기능이 복잡해져도 계층 역할을 섞지 않는다.

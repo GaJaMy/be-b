@@ -13,8 +13,10 @@ public enum ErrorCode {
     EXPIRED_ACCESS_TOKEN("AUTH_002", "만료된 액세스 토큰입니다.", 401),
 
     INVALID_CREATOR_ID_OR_PASSWORD("AUTH_005", "아이디 또는 비밀번호가 올바르지 않습니다.", 401),
-    INVALID_ADMIN_ID_OR_PASSWORD("AUTH_006", "아이디 또는 비밀번호가 올바르지 않습니다.", 401);
+    INVALID_ADMIN_ID_OR_PASSWORD("AUTH_006", "아이디 또는 비밀번호가 올바르지 않습니다.", 401),
 
+    NOT_FOUND_COURSE("COURSE_001", "강의를 찾을 수 없습니다.", 404)
+    ;
     private final String code;
     private final String message;
     private final int status;

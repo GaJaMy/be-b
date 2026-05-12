@@ -6,7 +6,7 @@ import com.liveclass.be_b.security.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -49,13 +49,13 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/api-docs/**",
                                 "/v3/api-docs",
-                                "/v3/api-docs/**",
-                                "/admin/auth/login",
-                                "/creator/auth/login"
+                                "/v3/api-docs/**"
                         ).permitAll()
-                        // 인증 API - 회원가입, 로그인 경로 허용
-                        .requestMatchers("/authorize/**").permitAll()
-                        // 그 외 모든 요청은 인증 필요
+                        .requestMatchers(HttpMethod.POST, "/sales").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/sales/*/cancellations").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/sales").hasRole("CREATOR")
+                        .requestMatchers("/creator/**").hasRole("CREATOR")
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

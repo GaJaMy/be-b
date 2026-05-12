@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/creator/auth")
+@RequestMapping("/creator")
 @RequiredArgsConstructor
 public class CreatorAuthController implements CreatorAuthControllerDocs{
     private final CreatorAuthUseCase creatorAuthUseCase;

@@ -12,9 +12,11 @@
 - 금액 단위는 원이며 정수로 처리한다.
 
 ## 인증 규칙
-- 크리에이터 API는 `ROLE_CREATOR` 인증이 필요하다.
-- 운영자 API는 `ROLE_ADMIN` 인증이 필요하다.
 - 로그인 API는 인증 없이 호출 가능하다.
+- 판매 등록과 취소 등록 API는 현재 단계에서 인증 없이 호출 가능하다.
+- 판매 내역 조회와 크리에이터 정산 조회는 `ROLE_CREATOR` 인증이 필요하다.
+- 운영자 정산 조회는 `ROLE_ADMIN` 인증이 필요하다.
+- 판매 등록과 취소 등록은 이후 수강생 인증 체계가 추가되면 권한 정책을 확장할 수 있다.
 
 ## 공통 응답 형식
 모든 API는 아래 공통 응답 형식을 사용한다.
@@ -113,7 +115,7 @@ Response
 ### 2.1 판매 내역 등록
 - Method: `POST`
 - Path: `/sales`
-- Auth: `ROLE_ADMIN`
+- Auth: 없음
 
 Request
 
@@ -177,7 +179,7 @@ Response
 ### 3.1 취소 내역 등록
 - Method: `POST`
 - Path: `/sales/{saleId}/cancellations`
-- Auth: `ROLE_ADMIN`
+- Auth: 없음
 
 Request
 
