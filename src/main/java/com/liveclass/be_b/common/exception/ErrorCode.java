@@ -1,4 +1,4 @@
-package com.liveclass.be_b.common.response;
+package com.liveclass.be_b.common.exception;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +10,10 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR("COMMON_002", "서버 내부 오류입니다.", 500),
 
     INVALID_ACCESS_TOKEN("AUTH_001", "유효하지 않은 액세스 토큰입니다.", 401),
-    EXPIRED_ACCESS_TOKEN("AUTH_002", "만료된 액세스 토큰입니다.", 401);
+    EXPIRED_ACCESS_TOKEN("AUTH_002", "만료된 액세스 토큰입니다.", 401),
+
+    INVALID_CREATOR_ID_OR_PASSWORD("AUTH_005", "아이디 또는 비밀번호가 올바르지 않습니다.", 401),
+    INVALID_ADMIN_ID_OR_PASSWORD("AUTH_006", "아이디 또는 비밀번호가 올바르지 않습니다.", 401);
 
     private final String code;
     private final String message;

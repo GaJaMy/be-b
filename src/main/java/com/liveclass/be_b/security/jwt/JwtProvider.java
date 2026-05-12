@@ -22,7 +22,7 @@ public class JwtProvider {
         return Keys.hmacShaKeyFor(getTokenProperties(principalType).getSecret().getBytes(StandardCharsets.UTF_8));
     }
 
-    private String generateAccessToken(Long principalId, String username, String role, String principalType) {
+    public String generateAccessToken(String principalId, String username, String role, String principalType) {
         return Jwts.builder()
                 .subject(username)
                 .claim("principalId", principalId)

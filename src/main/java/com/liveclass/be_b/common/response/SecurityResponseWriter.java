@@ -1,6 +1,7 @@
 package com.liveclass.be_b.common.response;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.liveclass.be_b.common.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;
 

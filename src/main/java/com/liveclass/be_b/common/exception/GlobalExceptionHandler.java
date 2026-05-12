@@ -1,7 +1,6 @@
 package com.liveclass.be_b.common.exception;
 
 import com.liveclass.be_b.common.response.ApiResponse;
-import com.liveclass.be_b.common.response.ErrorCode;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

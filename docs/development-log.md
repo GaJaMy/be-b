@@ -58,3 +58,24 @@
 - `JwtProvider`, `JwtProperties`, `JwtAuthenticationFilter`를 추가해 액세스 토큰 생성 및 검증 기반을 구성했다.
 - 크리에이터와 운영자 인증 주체를 구분하는 `AuthenticatedPrincipal`, 전용 `UserDetailsService`, 인증 프로바이더 구조를 추가했다.
 - 보안 예외 응답 처리를 위해 `SecurityResponseWriter`와 인증 관련 에러 코드를 정리하고 설정 값을 `application.yaml`에 반영했다.
+
+### Flyway 초기 스키마 추가
+
+- `src/main/resources/db/migration/V1__init_schema.sql` 파일을 추가했다.
+- `creator`, `admin`, `course`, `sale_record`, `cancellation_record` 테이블과 기본 인덱스, 제약조건을 초기 마이그레이션으로 구성했다.
+
+### API 명세 보정
+
+- 판매 등록 요청에서 `saleId`, 취소 등록 요청에서 `cancelId`를 제거했다.
+- 등록 식별자는 클라이언트 입력이 아니라 서버 생성 값으로 정리했다.
+
+### 크리에이터/운영자 로그인 구현
+
+- `api/auth`, `service/auth`, `repository` 구조를 추가해 크리에이터와 운영자 로그인 흐름을 구현했다.
+- 로그인 요청/응답 DTO, 인증 컨트롤러, 유스케이스, 서비스, 저장소를 연결했다.
+- 보안 설정과 JWT 인증 구조를 로그인 API 기준으로 보완했다.
+
+### 초기 계정 시드 추가
+
+- `Seeder`를 추가해 크리에이터와 운영자 초기 계정을 적재하는 기반을 구성했다.
+- 인증 테스트와 로그인 흐름 확인에 필요한 기본 계정 데이터를 애플리케이션 실행 시점에 준비하도록 정리했다.

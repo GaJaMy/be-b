@@ -1,6 +1,5 @@
 package com.liveclass.be_b.common.exception;
 
-import com.liveclass.be_b.common.response.ErrorCode;
 import lombok.Getter;
 
 @Getter

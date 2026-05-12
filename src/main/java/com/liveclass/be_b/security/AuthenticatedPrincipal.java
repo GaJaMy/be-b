@@ -15,13 +15,13 @@ public class AuthenticatedPrincipal implements UserDetails {
     public static final String ADMIN_PRINCIPAL_TYPE = "ADMIN";
     public static final String CREATOR_PRINCIPAL_TYPE = "CREATOR";
 
-    private final Long principalId;
+    private final String principalId;
     private final String username;
     private final String password;
     private final String role;
     private final String principalType;
 
-    public AuthenticatedPrincipal(String username, String password, Long principalId, String role, String principalType) {
+    public AuthenticatedPrincipal(String username, String password, String principalId, String role, String principalType) {
         this.username = username;
         this.password = password;
         this.principalId = principalId;
@@ -34,7 +34,7 @@ public class AuthenticatedPrincipal implements UserDetails {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role));
     }
 
-    public Long getUserId() {
+    public String getUserId() {
         return principalId;
     }
 

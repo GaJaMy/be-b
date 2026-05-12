@@ -1,7 +1,7 @@
 package com.liveclass.be_b.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.liveclass.be_b.common.response.ErrorCode;
+import com.liveclass.be_b.common.exception.ErrorCode;
 import com.liveclass.be_b.common.response.SecurityResponseWriter;
 import com.liveclass.be_b.security.AuthenticatedPrincipal;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -41,7 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             var claims = jwtProvider.parseClaims(token);
 
             String role = claims.get("role", String.class);
-            Long principalId = claims.get("principalId", Long.class);
+            String principalId = claims.get("principalId", String.class);
             String principalType = claims.get("principalType", String.class);
             String username = claims.getSubject();
 

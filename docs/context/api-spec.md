@@ -119,13 +119,15 @@ Request
 
 ```json
 {
-  "saleId": "sale-1",
   "courseId": "course-1",
   "studentId": "student-1",
   "amount": 50000,
   "paidAt": "2025-03-05T10:00:00+09:00"
 }
 ```
+
+비고
+- `saleId`는 요청으로 받지 않고 서버에서 생성한다.
 
 Response
 
@@ -181,11 +183,13 @@ Request
 
 ```json
 {
-  "cancelId": "cancel-1",
   "refundAmount": 80000,
   "canceledAt": "2025-03-25T18:00:00+09:00"
 }
 ```
+
+비고
+- `cancelId`는 요청으로 받지 않고 서버에서 생성한다.
 
 Response
 

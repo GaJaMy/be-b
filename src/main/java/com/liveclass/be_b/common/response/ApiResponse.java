@@ -1,5 +1,6 @@
 package com.liveclass.be_b.common.response;
 
+import com.liveclass.be_b.common.exception.ErrorCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
