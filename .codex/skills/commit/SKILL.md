@@ -7,7 +7,7 @@ description: Write and execute git commits that follow repository commit convent
 
 ## Overview
 
-Review the current git changes, choose the most appropriate commit type, write a concise header and short body, then commit with a non-interactive git command.
+현재 git 변경사항을 검토하고 가장 적절한 커밋 타입을 고른 뒤, 한국어 헤더와 짧은 본문을 작성해 non-interactive git 명령으로 커밋한다.
 
 ## Workflow
 
@@ -44,14 +44,15 @@ Write the body as short bullets that describe the main work. Do not make it over
 ```text
 <type> : <summary>
 
-- implemented ...
-- added ...
-- updated ...
+- ...를 구현했다
+- ...를 추가했다
+- ...를 수정했다
 ```
 
 Rules:
 
 - Keep the header to the main outcome only.
+- Write the header and body in Korean by default.
 - Prefer one language consistently within a single commit message.
 - The body should usually be 1 to 3 bullets.
 - Describe what was developed or changed, not every file name.
@@ -89,8 +90,8 @@ Before committing:
 
 - identify the changed scope
 - determine the best commit type
-- draft a short header
-- draft a brief body
+- draft a short Korean header
+- draft a brief Korean body
 - update `docs/development-log.md` when needed
 
 After committing:
@@ -112,10 +113,10 @@ User request:
 Possible result:
 
 ```text
-docs : add project context and API documentation
+docs : 프로젝트 컨텍스트 및 API 문서를 추가했다
 
-- added project overview, domain design, and ERD documents
-- added development rules and API specification
+- 프로젝트 개요, 도메인 설계, ERD 문서를 추가했다
+- 개발 규칙과 API 명세 문서를 정리했다
 ```
 
 ### Example 2
@@ -129,8 +130,8 @@ User request:
 Possible result:
 
 ```text
-feat : add creator and admin login flow
+feat : 크리에이터와 운영자 로그인 흐름을 추가했다
 
-- implemented creator and admin login use cases
-- added authentication API and security handling
+- 크리에이터와 운영자 로그인 유스케이스를 구현했다
+- 인증 API와 보안 처리 구성을 추가했다
 ```
