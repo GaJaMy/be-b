@@ -27,6 +27,27 @@ dependencies {
 	testCompileOnly 'org.projectlombok:lombok'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testAnnotationProcessor 'org.projectlombok:lombok'
+
+    // Swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.15'
+
+    // JPA 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    //mysql 의존성
+    implementation 'com.mysql:mysql-connector-j:8.0.33'
+
+    //Java JWT - JWT 생성 관련 의존성
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    implementation 'io.jsonwebtoken:jjwt-gson:0.11.5'
+
+    // Hibernate Validator
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // Flyway
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-mysql'
 }
 
 tasks.named('test') {
