@@ -35,3 +35,21 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+# Thumbnails
+._*
+
+# Files that might appear in external disks
+.Spotlight-V100
+.Trashes
+
+# macOS temp files
+*.swp
