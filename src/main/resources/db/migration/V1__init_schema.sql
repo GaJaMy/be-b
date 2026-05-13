@@ -26,8 +26,7 @@ CREATE TABLE course (
     title VARCHAR(200) NOT NULL,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
-    CONSTRAINT pk_course PRIMARY KEY (id),
-    CONSTRAINT fk_course_creator FOREIGN KEY (creator_id) REFERENCES creator (id)
+    CONSTRAINT pk_course PRIMARY KEY (id)
 );
 
 CREATE TABLE sale_record (
@@ -40,8 +39,6 @@ CREATE TABLE sale_record (
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
     CONSTRAINT pk_sale_record PRIMARY KEY (id),
-    CONSTRAINT fk_sale_record_course FOREIGN KEY (course_id) REFERENCES course (id),
-    CONSTRAINT fk_sale_record_creator FOREIGN KEY (creator_id) REFERENCES creator (id),
     CONSTRAINT ck_sale_record_amount_positive CHECK (amount > 0)
 );
 
@@ -54,8 +51,6 @@ CREATE TABLE cancellation_record (
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
     CONSTRAINT pk_cancellation_record PRIMARY KEY (id),
-    CONSTRAINT fk_cancellation_record_sale_record FOREIGN KEY (sale_record_id) REFERENCES sale_record (id),
-    CONSTRAINT fk_cancellation_record_creator FOREIGN KEY (creator_id) REFERENCES creator (id),
     CONSTRAINT ck_cancellation_record_refund_amount_positive CHECK (refund_amount > 0)
 );
 

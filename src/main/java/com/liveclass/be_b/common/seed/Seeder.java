@@ -1,9 +1,13 @@
 package com.liveclass.be_b.common.seed;
 
 import com.liveclass.be_b.domain.admin.entity.Admin;
+import com.liveclass.be_b.domain.cancellation.entity.CancellationRecord;
 import com.liveclass.be_b.domain.course.entity.Course;
 import com.liveclass.be_b.domain.creator.entity.Creator;
+import com.liveclass.be_b.domain.sale.entity.SaleRecord;
 import com.liveclass.be_b.repository.admin.AdminRepository;
+import com.liveclass.be_b.repository.cancellation.CancellationRepository;
+import com.liveclass.be_b.repository.course.CourseRepository;
 import com.liveclass.be_b.repository.creator.CreatorRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -12,8 +16,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Configuration
 public class Seeder {
@@ -53,6 +62,7 @@ public class Seeder {
     ) {
         String hashedPassword = passwordEncoder.encode(RAW_PASSWORD);
         List<Creator> creatorList = createCreator(hashedPassword);
+        creatorRepository.saveAll(creatorList);
 
         List<Admin> adminList = createAdmin(hashedPassword);
         adminRepository.saveAll(adminList);
