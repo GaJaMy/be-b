@@ -72,8 +72,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/sales").permitAll()
                         .requestMatchers(HttpMethod.POST, "/sales/*/cancellations").permitAll()
                         .requestMatchers(HttpMethod.GET, "/sales").hasRole("CREATOR")
+                        .requestMatchers(HttpMethod.POST, "/creator/settlements").hasRole("CREATOR")
+                        .requestMatchers(HttpMethod.GET, "/creator/settlements").hasRole("CREATOR")
                         .requestMatchers(HttpMethod.GET,"/creator/settlements/monthly").hasRole("CREATOR")
                         .requestMatchers(HttpMethod.GET, "/admin/settlements").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/admin/settlement-management").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/admin/settlement-management/*/confirm").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/admin/settlement-management/*/pay").hasRole("ADMIN")
                         .anyRequest().permitAll()
                 )
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

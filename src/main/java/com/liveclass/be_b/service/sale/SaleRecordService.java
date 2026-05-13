@@ -21,13 +21,19 @@ public class SaleRecordService {
     private final SaleRecordRepository saleRecordRepository;
 
     @Transactional
-    public String registerSale(Course course, String studentId, Long amount, LocalDateTime paidAt) {
+    public String registerSale(
+            Course course,
+            String studentId,
+            Long amount,
+            Integer feeRatePercent,
+            LocalDateTime paidAt
+    ) {
         long count = saleRecordRepository.count();
 
         String saleId = String.format("%s-%d", SALE_ID_PREFIX, count);
 
         SaleRecord saleRecord =
-                SaleRecord.create(saleId, course, course.getCreator(), studentId, amount, paidAt);
+                SaleRecord.create(saleId, course, course.getCreator(), studentId, amount, feeRatePercent, paidAt);
 
         SaleRecord save = saleRecordRepository.save(saleRecord);
 

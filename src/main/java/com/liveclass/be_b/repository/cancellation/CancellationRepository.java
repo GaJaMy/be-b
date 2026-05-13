@@ -12,15 +12,29 @@ import java.util.List;
 
 public interface CancellationRepository extends JpaRepository<CancellationRecord, String> {
 
+    @Query("""
+            select cr
+            from CancellationRecord cr
+            join fetch cr.saleRecord sr
+            where cr.creator = :creator
+                and cr.canceledAt >= :from and cr.canceledAt < :to
+            """)
     List<CancellationRecord> findByCreatorAndCanceledAtGreaterThanEqualAndCanceledAtLessThan(
-            Creator creator,
-            LocalDateTime from,
-            LocalDateTime to
+            @Param("creator") Creator creator,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to
     );
 
+    @Query("""
+            select cr
+            from CancellationRecord cr
+            join fetch cr.saleRecord sr
+            where cr.creator in :creatorList
+                and cr.canceledAt >= :from and cr.canceledAt < :to
+            """)
     List<CancellationRecord> findByCreatorInAndCanceledAtGreaterThanEqualAndCanceledAtLessThan(
-            List<Creator> creatoList,
-            LocalDateTime from,
-            LocalDateTime to
+            @Param("creatorList") List<Creator> creatorList,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to
     );
 }

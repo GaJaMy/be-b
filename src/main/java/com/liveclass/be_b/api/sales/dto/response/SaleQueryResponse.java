@@ -16,14 +16,23 @@ public class SaleQueryResponse {
     private String courseId;
     private String studentId;
     private Long amount;
+    private Integer feeRatePercent;
     private LocalDateTime paidAt;
 
-    public static SaleQueryResponse of(String saleId, String courseId, String studentId, Long amount, LocalDateTime paidAt) {
+    public static SaleQueryResponse of(
+            String saleId,
+            String courseId,
+            String studentId,
+            Long amount,
+            Integer feeRatePercent,
+            LocalDateTime paidAt
+    ) {
         return SaleQueryResponse.builder()
                 .saleId(saleId)
                 .courseId(courseId)
                 .studentId(studentId)
                 .amount(amount)
+                .feeRatePercent(feeRatePercent)
                 .paidAt(paidAt)
                 .build();
     }

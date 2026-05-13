@@ -17,7 +17,7 @@ public class Course extends BaseEntity {
     @Column(name = "id", length = 50, nullable = false)
     private String id;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private Creator creator;
 

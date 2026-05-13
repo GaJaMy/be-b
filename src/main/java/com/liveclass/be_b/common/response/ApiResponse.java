@@ -21,6 +21,10 @@ public class ApiResponse<T> {
         return ResponseEntity.ok(new ApiResponse<>("SUCCESS", "ok", data));
     }
 
+    public static <T> ResponseEntity<ApiResponse<T>> ok(String message, T data) {
+        return ResponseEntity.ok(new ApiResponse<>("SUCCESS", message, data));
+    }
+
     public static ResponseEntity<ApiResponse<Void>> ok() {
         return ResponseEntity.ok(new ApiResponse<>("SUCCESS", "ok", null));
     }

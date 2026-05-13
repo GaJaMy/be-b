@@ -9,6 +9,7 @@ import com.liveclass.be_b.domain.creator.entity.Creator;
 import com.liveclass.be_b.domain.sale.entity.SaleRecord;
 import com.liveclass.be_b.service.course.CourseService;
 import com.liveclass.be_b.service.creator.CreatorService;
+import com.liveclass.be_b.service.feepolicy.FeePolicyService;
 import com.liveclass.be_b.service.sale.SaleRecordService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -24,16 +25,19 @@ public class SaleUseCase {
     private final SaleRecordService saleRecordService;
     private final CourseService courseService;
     private final CreatorService creatorService;
+    private final FeePolicyService feePolicyService;
 
     @Transactional
     public SaleRegisterResponse registerSale(SaleRegisterRequest request) {
 
         Course course = courseService.findCourse(request.getCourseId());
+        int currentFeePolicyRatePercent = feePolicyService.getCurrentFeePolicyRatePercent();
 
         String saleId = saleRecordService.registerSale(
                 course,
                 request.getStudentId(),
                 request.getAmount(),
+                currentFeePolicyRatePercent,
                 DateTimeUtil.toKstLocalDateTime(request.getPaidAt())
         );
 
@@ -55,6 +59,7 @@ public class SaleUseCase {
                         saleRecord.getCourse().getId(),
                         saleRecord.getStudentId(),
                         saleRecord.getAmount(),
+                        saleRecord.getFeeRatePercent(),
                         saleRecord.getPaidAt()
                 ))
                 .toList();

@@ -34,11 +34,21 @@ public class SaleRecord extends BaseEntity {
     @Column(name = "amount", nullable = false)
     private Long amount;
 
+    @Column(name = "fee_rate_percent", nullable = false)
+    private Integer feeRatePercent;
+
     @Column(name = "paid_at", nullable = false)
     private LocalDateTime paidAt;
 
     public static SaleRecord create(
-            String id, Course course, Creator creator, String studentId, Long amount, LocalDateTime paidAt) {
+            String id,
+            Course course,
+            Creator creator,
+            String studentId,
+            Long amount,
+            Integer feeRatePercent,
+            LocalDateTime paidAt
+    ) {
         SaleRecord saleRecord = new SaleRecord();
 
         saleRecord.id = id;
@@ -46,6 +56,7 @@ public class SaleRecord extends BaseEntity {
         saleRecord.creator = creator;
         saleRecord.studentId = studentId;
         saleRecord.amount = amount;
+        saleRecord.feeRatePercent = feeRatePercent;
         saleRecord.paidAt = paidAt;
 
         return saleRecord;

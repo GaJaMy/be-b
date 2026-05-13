@@ -22,7 +22,15 @@ public enum ErrorCode {
 
     NOT_FOUND_COURSE("COURSE_001", "강의를 찾을 수 없습니다.", 404),
 
-    NOT_FOUND_SALE("SALE_001", "판매 내역을 찾을 수 없습니다..", 404)
+    NOT_FOUND_SALE("SALE_001", "판매 내역을 찾을 수 없습니다..", 404),
+
+    NOT_FOUND_FEE_POLICY("FEE_POLICY_001", "수수료율 정책을 찾을 수 없습니다.", 404),
+
+    ALREADY_EXISTS_SETTLEMENT("SETTLEMENT_006", "동일 연월 정산이 이미 존재합니다.", 409),
+    SETTLEMENT_MONTH_NOT_CLOSED("SETTLEMENT_007", "대상 월이 종료되기 전에는 정산을 생성할 수 없습니다.", 400),
+    NOT_FOUND_SETTLEMENT("SETTLEMENT_008", "정산 정보를 찾을 수 없습니다.", 404),
+    INVALID_SETTLEMENT_CONFIRM("SETTLEMENT_009", "현재 상태에서는 정산 확정을 할 수 없습니다.", 409),
+    INVALID_SETTLEMENT_PAY("SETTLEMENT_010", "현재 상태에서는 정산 지급 처리를 할 수 없습니다.", 409)
     ;
     private final String code;
     private final String message;

@@ -132,13 +132,14 @@ Request
 
 비고
 - `saleId`는 요청으로 받지 않고 서버에서 생성한다.
+- 판매 등록 시점의 현재 수수료율을 `sale_record.fee_rate_percent`에 함께 저장한다.
 
 Response
 
 ```json
 {
   "errorCode": "SUCCESS",
-  "msg": "판매 내역이 등록되었습니다.",
+  "msg": "ok",
   "data": {
     "saleId": "sale-1"
   }
@@ -169,6 +170,7 @@ Response
       "courseId": "course-1",
       "studentId": "student-1",
       "amount": 50000,
+      "feeRatePercent": 20,
       "paidAt": "2025-03-05T10:00:00+09:00"
     }
   ]
@@ -200,7 +202,7 @@ Response
 ```json
 {
   "errorCode": "SUCCESS",
-  "msg": "취소 내역이 등록되었습니다.",
+  "msg": "ok",
   "data": {
     "cancelId": "cancel-1"
   }
@@ -244,6 +246,8 @@ Response
 비고
 - 조회 주체는 인증된 크리에이터 자신으로 제한한다.
 - 판매는 `paidAt`, 취소는 `canceledAt` 기준으로 집계한다.
+- 판매분은 각 판매에 저장된 `feeRatePercent` 기준으로 묶고, 환불분은 원본 판매의 `feeRatePercent` 기준으로 차감해 수수료율별 순액을 만든 뒤 계산한다.
+- 모든 판매의 수수료율이 같으면 `플랫폼 수수료 = 순 판매 금액의 수수료율%` 공식과 동일한 결과가 된다.
 
 ## 5. 운영자 정산 API
 과제 원문 기준 필수 API이다.
@@ -310,7 +314,7 @@ Response
 ```json
 {
   "errorCode": "SUCCESS",
-  "msg": "정산이 생성되었습니다.",
+  "msg": "ok",
   "data": {
     "settlementId": "settlement-1",
     "status": "PENDING"
@@ -327,8 +331,12 @@ Query Parameters
 
 | 이름 | 타입 | 필수 | 설명 |
 | --- | --- | --- | --- |
-| `status` | `string` | N | `PENDING`, `CONFIRMED`, `PAID` |
-| `yearMonth` | `string` | N | 조회 연월, 예: `2025-03` |
+| `from` | `string` | Y | 조회 시작 연월, 예: `2025-03` |
+| `to` | `string` | Y | 조회 종료 연월, 예: `2025-05` |
+
+비고
+- `from`, `to`는 정산 대상 연월 기준이며 양 끝 연월을 포함한다.
+- 목록 응답에 정산 상세에 필요한 필드를 함께 내려주므로 별도 상세 조회 API는 두지 않는다.
 
 Response
 
@@ -339,47 +347,25 @@ Response
   "data": [
     {
       "settlementId": "settlement-1",
+      "creatorId": "creator-1",
       "yearMonth": "2025-03",
+      "grossSalesAmount": 260000,
+      "refundAmount": 110000,
+      "netSalesAmount": 150000,
+      "platformFeeAmount": 30000,
       "expectedPayoutAmount": 120000,
+      "saleCount": 4,
+      "cancelCount": 2,
       "status": "PENDING",
-      "requestedAt": "2025-04-01T09:00:00+09:00"
+      "requestedAt": "2025-04-01T09:00:00+09:00",
+      "confirmedAt": null,
+      "paidAt": null
     }
   ]
 }
 ```
 
-### 6.3 크리에이터 정산 상세 조회
-- Method: `GET`
-- Path: `/creator/settlements/{settlementId}`
-- Auth: `ROLE_CREATOR`
-
-Response
-
-```json
-{
-  "errorCode": "SUCCESS",
-  "msg": "ok",
-  "data": {
-    "settlementId": "settlement-1",
-    "creatorId": "creator-1",
-    "yearMonth": "2025-03",
-    "platformFeeRate": 0.2,
-    "grossSalesAmount": 260000,
-    "refundAmount": 110000,
-    "netSalesAmount": 150000,
-    "platformFeeAmount": 30000,
-    "expectedPayoutAmount": 120000,
-    "saleCount": 4,
-    "cancelCount": 2,
-    "status": "PENDING",
-    "requestedAt": "2025-04-01T09:00:00+09:00",
-    "confirmedAt": null,
-    "paidAt": null
-  }
-}
-```
-
-### 6.4 운영자 정산 목록 조회
+### 6.3 운영자 정산 목록 조회
 - Method: `GET`
 - Path: `/admin/settlement-management`
 - Auth: `ROLE_ADMIN`
@@ -388,9 +374,12 @@ Query Parameters
 
 | 이름 | 타입 | 필수 | 설명 |
 | --- | --- | --- | --- |
-| `status` | `string` | N | `PENDING`, `CONFIRMED`, `PAID` |
-| `yearMonth` | `string` | N | 정산 대상 연월 |
-| `creatorId` | `string` | N | 특정 크리에이터 필터 |
+| `from` | `string` | Y | 조회 시작 연월, 예: `2025-03` |
+| `to` | `string` | Y | 조회 종료 연월, 예: `2025-05` |
+
+비고
+- `from`, `to`는 정산 대상 연월 기준이며 양 끝 연월을 포함한다.
+- 목록 응답에 정산 상세에 필요한 필드를 함께 내려주므로 별도 상세 조회 API는 두지 않는다.
 
 Response
 
@@ -404,16 +393,25 @@ Response
       "creatorId": "creator-1",
       "creatorName": "김강사",
       "yearMonth": "2025-03",
+      "grossSalesAmount": 260000,
+      "refundAmount": 110000,
+      "netSalesAmount": 150000,
+      "platformFeeAmount": 30000,
       "expectedPayoutAmount": 120000,
-      "status": "PENDING"
+      "saleCount": 4,
+      "cancelCount": 2,
+      "status": "PENDING",
+      "requestedAt": "2025-04-01T09:00:00+09:00",
+      "confirmedAt": null,
+      "paidAt": null
     }
   ]
 }
 ```
 
-### 6.5 운영자 정산 상세 조회
-- Method: `GET`
-- Path: `/admin/settlement-management/{settlementId}`
+### 6.4 운영자 정산 확정
+- Method: `POST`
+- Path: `/admin/settlement-management/{settlementId}/confirm`
 - Auth: `ROLE_ADMIN`
 
 Response
@@ -424,44 +422,12 @@ Response
   "msg": "ok",
   "data": {
     "settlementId": "settlement-1",
-    "creatorId": "creator-1",
-    "creatorName": "김강사",
-    "yearMonth": "2025-03",
-    "platformFeeRate": 0.2,
-    "grossSalesAmount": 260000,
-    "refundAmount": 110000,
-    "netSalesAmount": 150000,
-    "platformFeeAmount": 30000,
-    "expectedPayoutAmount": 120000,
-    "saleCount": 4,
-    "cancelCount": 2,
-    "status": "PENDING",
-    "requestedAt": "2025-04-01T09:00:00+09:00",
-    "confirmedAt": null,
-    "paidAt": null
-  }
-}
-```
-
-### 6.6 운영자 정산 확정
-- Method: `POST`
-- Path: `/admin/settlement-management/{settlementId}/confirm`
-- Auth: `ROLE_ADMIN`
-
-Response
-
-```json
-{
-  "errorCode": "SUCCESS",
-  "msg": "정산이 확정되었습니다.",
-  "data": {
-    "settlementId": "settlement-1",
     "status": "CONFIRMED"
   }
 }
 ```
 
-### 6.7 운영자 정산 지급 처리
+### 6.5 운영자 정산 지급 처리
 - Method: `POST`
 - Path: `/admin/settlement-management/{settlementId}/pay`
 - Auth: `ROLE_ADMIN`
@@ -471,7 +437,7 @@ Response
 ```json
 {
   "errorCode": "SUCCESS",
-  "msg": "정산이 지급 완료되었습니다.",
+  "msg": "ok",
   "data": {
     "settlementId": "settlement-1",
     "status": "PAID"
@@ -479,12 +445,43 @@ Response
 }
 ```
 
-## 7. 추가 요구 수수료율 이력 API
+## 7. 추가 요구 수수료율 API
 추가 요구로 반영하는 API이다.
 
-### 7.1 수수료율 이력 등록
+### 7.1 현재 수수료율 변경
+- Method: `PATCH`
+- Path: `/admin/fee-policy`
+- Auth: `ROLE_ADMIN`
+
+Request
+
+```json
+{
+  "feeRatePercent": 20
+}
+```
+
+비고
+- `fee_policy`는 현재 적용할 수수료율을 저장하는 단일 row 설정이다.
+- 요청과 응답의 `feeRatePercent`는 정수 퍼센트 값이며, 서버도 퍼센트 정수로 저장한다.
+- 이 API는 현재 수수료율만 변경하며, 과거 `fee_policy_history`는 수정하지 않는다.
+- 변경된 현재 수수료율은 이후 판매 등록 시 `sale_record.fee_rate_percent`에 저장될 기준값으로 사용한다.
+
+Response
+
+```json
+{
+  "errorCode": "SUCCESS",
+  "msg": "ok",
+  "data": {
+    "feeRatePercent": 20
+  }
+}
+```
+
+### 7.2 수수료율 이력 등록
 - Method: `POST`
-- Path: `/admin/fee-policies`
+- Path: `/admin/fee-policy-histories`
 - Auth: `ROLE_ADMIN`
 
 Request
@@ -492,28 +489,34 @@ Request
 ```json
 {
   "targetYearMonth": "2025-03",
-  "feeRate": 0.2
+  "feeRatePercent": 20
 }
 ```
 
 비고
-- 한 연월에는 하나의 수수료율만 등록할 수 있다.
+- 요청과 응답의 `feeRatePercent`는 정수 퍼센트 값이며, 서버도 퍼센트 정수로 저장한다.
+- 요청한 수수료율을 기준으로 해당 기준 연월의 `fee_policy_history`를 생성한다.
+- 한 연월에는 하나의 수수료율 이력만 등록할 수 있다.
+- 이미 해당 연월의 이력이 존재하면 중복 등록하지 않는다.
+- `fee_policy_history`는 수수료율 변경 내역 조회용이며, 정산 계산은 판매 당시 `sale_record.fee_rate_percent`를 기준으로 한다.
 
 Response
 
 ```json
 {
   "errorCode": "SUCCESS",
-  "msg": "수수료율 이력이 등록되었습니다.",
+  "msg": "ok",
   "data": {
-    "feePolicyHistoryId": "fee-policy-1"
+    "feePolicyHistoryId": "fee-policy-history-1",
+    "targetYearMonth": "2025-03",
+    "feeRatePercent": 20
   }
 }
 ```
 
-### 7.2 수수료율 이력 목록 조회
+### 7.3 수수료율 이력 목록 조회
 - Method: `GET`
-- Path: `/admin/fee-policies`
+- Path: `/admin/fee-policy-histories`
 - Auth: `ROLE_ADMIN`
 
 Response
@@ -524,30 +527,11 @@ Response
   "msg": "ok",
   "data": [
     {
-      "feePolicyHistoryId": "fee-policy-1",
+      "feePolicyHistoryId": "fee-policy-history-1",
       "targetYearMonth": "2025-03",
-      "feeRate": 0.2
+      "feeRatePercent": 20
     }
   ]
-}
-```
-
-### 7.3 수수료율 이력 상세 조회
-- Method: `GET`
-- Path: `/admin/fee-policies/{feePolicyHistoryId}`
-- Auth: `ROLE_ADMIN`
-
-Response
-
-```json
-{
-  "errorCode": "SUCCESS",
-  "msg": "ok",
-  "data": {
-    "feePolicyHistoryId": "fee-policy-1",
-    "targetYearMonth": "2025-03",
-    "feeRate": 0.2
-  }
 }
 ```
 
@@ -607,7 +591,7 @@ Response
 
 | 코드 | HTTP | 설명 |
 | --- | --- | --- |
-| `FEE_POLICY_001` | `404` | 수수료율 이력을 찾을 수 없음 |
+| `FEE_POLICY_001` | `404` | 현재 수수료율 정책 또는 수수료율 이력을 찾을 수 없음 |
 | `FEE_POLICY_002` | `409` | 해당 연월의 수수료율 이력이 이미 존재함 |
 
 ### COMMON
