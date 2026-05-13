@@ -29,8 +29,20 @@ public class CancellationRecord extends BaseEntity {
     private Creator creator;
 
     @Column(name = "refund_amount", nullable = false)
-    private Long refund_amount;
+    private Long refundAmount;
 
     @Column(name = "canceled_at", nullable = false)
     private LocalDateTime canceledAt;
+
+    public static CancellationRecord create(String id, SaleRecord saleRecord, Long refundAmount, LocalDateTime canceledAt) {
+        CancellationRecord cancellationRecord = new CancellationRecord();
+
+        cancellationRecord.id = id;
+        cancellationRecord.saleRecord = saleRecord;
+        cancellationRecord.creator = saleRecord.getCreator();
+        cancellationRecord.refundAmount = refundAmount;
+        cancellationRecord.canceledAt = canceledAt;
+
+        return cancellationRecord;
+    }
 }

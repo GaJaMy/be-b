@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Builder
@@ -15,5 +16,5 @@ public class SaleRegisterRequest {
     private String courseId;
     private String studentId;
     private Long amount;
-    private LocalDateTime paidAt;
+    private OffsetDateTime paidAt;
 }

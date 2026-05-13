@@ -15,7 +15,11 @@ public enum ErrorCode {
     INVALID_CREATOR_ID_OR_PASSWORD("AUTH_005", "아이디 또는 비밀번호가 올바르지 않습니다.", 401),
     INVALID_ADMIN_ID_OR_PASSWORD("AUTH_006", "아이디 또는 비밀번호가 올바르지 않습니다.", 401),
 
-    NOT_FOUND_COURSE("COURSE_001", "강의를 찾을 수 없습니다.", 404)
+    NOT_FOUND_CREATOR("AUTH_007", "크리에이터를 찾을 수 없습니다.", 404),
+
+    NOT_FOUND_COURSE("COURSE_001", "강의를 찾을 수 없습니다.", 404),
+
+    NOT_FOUND_SALE("SALE_001", "판매 내역을 찾을 수 없습니다..", 404)
     ;
     private final String code;
     private final String message;

@@ -9,6 +9,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SalCancelRegisterResponse {
+public class CancellationRegisterResponse {
     private String cancelId;
+
+    public static CancellationRegisterResponse of(String cancelId) {
+        return CancellationRegisterResponse.builder()
+                .cancelId(cancelId)
+                .build();
+    }
 }

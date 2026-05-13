@@ -23,4 +23,14 @@ public class Course extends BaseEntity {
 
     @Column(name = "title", length = 200, nullable = false)
     private String title;
+
+    public static Course create(String id, Creator creator, String title) {
+        Course course = new Course();
+
+        course.id = id;
+        course.creator = creator;
+        course.title = title;
+
+        return course;
+    }
 }

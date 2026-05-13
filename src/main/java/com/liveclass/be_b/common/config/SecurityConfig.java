@@ -49,7 +49,9 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/api-docs/**",
                                 "/v3/api-docs",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/creator/login",
+                                "/admin/login"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, "/sales").permitAll()
                         .requestMatchers(HttpMethod.POST, "/sales/*/cancellations").permitAll()

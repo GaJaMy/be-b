@@ -1,6 +1,7 @@
 package com.liveclass.be_b.common.seed;
 
 import com.liveclass.be_b.domain.admin.entity.Admin;
+import com.liveclass.be_b.domain.course.entity.Course;
 import com.liveclass.be_b.domain.creator.entity.Creator;
 import com.liveclass.be_b.repository.admin.AdminRepository;
 import com.liveclass.be_b.repository.creator.CreatorRepository;
@@ -52,7 +53,6 @@ public class Seeder {
     ) {
         String hashedPassword = passwordEncoder.encode(RAW_PASSWORD);
         List<Creator> creatorList = createCreator(hashedPassword);
-        creatorRepository.saveAll(creatorList);
 
         List<Admin> adminList = createAdmin(hashedPassword);
         adminRepository.saveAll(adminList);
