@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -24,6 +23,7 @@ public class SaleRecordService {
     @Transactional
     public String registerSale(Course course, String studentId, Long amount, LocalDateTime paidAt) {
         long count = saleRecordRepository.count();
+
         String saleId = String.format("%s-%d", SALE_ID_PREFIX, count);
 
         SaleRecord saleRecord =
@@ -35,16 +35,18 @@ public class SaleRecordService {
     }
 
     @Transactional(readOnly = true)
-    public List<SaleRecord> querySaleBetweenFromTo(Creator creator, LocalDate from, LocalDate to) {
-        LocalDateTime fromDateTime = from.atStartOfDay();
-        LocalDateTime toDateTime = to.atStartOfDay();
-
-        return saleRecordRepository.findByCreatorAndPaidAtBetweenWithCreator(creator, fromDateTime, toDateTime);
+    public List<SaleRecord> querySaleBetweenFromTo(Creator creator, LocalDateTime from, LocalDateTime to) {
+        return saleRecordRepository.findByCreatorAndPaidAtBetweenWithCreator(creator, from, to);
     }
 
     @Transactional(readOnly = true)
     public SaleRecord findSaleRecord(String saleId) {
         return saleRecordRepository.findByIdWithCreator(saleId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_SALE));
+    }
+
+    @Transactional(readOnly = true)
+    public List<SaleRecord> querySaleBetweenFromTo(List<Creator> creatorList, LocalDateTime from, LocalDateTime to) {
+        return saleRecordRepository.findByCreatorAndPaidAtBetweenInCreator(creatorList, from, to);
     }
 }

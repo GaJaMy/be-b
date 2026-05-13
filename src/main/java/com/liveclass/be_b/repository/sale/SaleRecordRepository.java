@@ -17,7 +17,7 @@ public interface SaleRecordRepository extends JpaRepository<SaleRecord, String> 
                 from SaleRecord sr
                 join fetch sr.course
                 where sr.creator = :creator
-                    and sr.paidAt between :from and :to
+                    and sr.paidAt >= :from and sr.paidAt < :to
             """)
     List<SaleRecord> findByCreatorAndPaidAtBetweenWithCreator(
             @Param("creator") Creator creator,
@@ -33,5 +33,17 @@ public interface SaleRecordRepository extends JpaRepository<SaleRecord, String> 
             """)
     Optional<SaleRecord> findByIdWithCreator(
             @Param("saleId") String saleId
+    );
+
+    @Query("""
+                select sr
+                from SaleRecord sr
+                where sr.creator in :creatorList
+                    and sr.paidAt >= :from and sr.paidAt < :to
+            """)
+    List<SaleRecord> findByCreatorAndPaidAtBetweenInCreator(
+            @Param("creatorList") List<Creator> creatorList,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to
     );
 }

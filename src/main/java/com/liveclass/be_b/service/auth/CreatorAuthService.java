@@ -26,7 +26,7 @@ public class CreatorAuthService {
                     new UsernamePasswordAuthenticationToken(loginId, password)
             );
         } catch (AuthenticationException e) {
-            throw new BusinessException(ErrorCode.INVALID_ADMIN_ID_OR_PASSWORD);
+            throw new BusinessException(ErrorCode.INVALID_CREATOR_ID_OR_PASSWORD);
         }
 
         AuthenticatedPrincipal authenticationPrincipal = (AuthenticatedPrincipal) authentication.getPrincipal();

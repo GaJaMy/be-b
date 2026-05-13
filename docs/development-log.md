@@ -122,3 +122,24 @@
 
 - 엔티티의 `ConstraintMode.NO_CONSTRAINT` 설정과 맞추기 위해 `V1__init_schema.sql`의 외래키 제약을 제거했다.
 - 컬럼 구조와 조회용 인덱스는 유지하고 스키마 제약만 완화했다.
+
+### 정산 조회 계산 로직 정리
+
+- 정산 조회의 기간 경계 생성을 `SettlementUseCase`에서 일관되게 처리하도록 정리했다.
+- 판매/취소 합계 계산을 내부 공통 메서드와 `SettlementMetrics` record로 묶어 중복을 줄였다.
+- 정산 조회 서비스는 `LocalDateTime` 범위를 직접 받아 조회 책임만 가지도록 정리했다.
+
+### 날짜 유틸 공통화
+
+- `common/util/DateTimeUtil`을 추가해 월 시작, 월 종료 exclusive, 일 시작, 일 종료 exclusive 계산을 공통 메서드로 분리했다.
+- `SettlementUseCase`의 날짜 경계 계산 로직을 유틸 메서드 호출로 정리했다.
+
+### API 에러 코드 정리
+
+- Bean Validation과 바인딩으로 처리할 수 있는 입력 오류 코드를 API 명세에서 제거했다.
+- 입력 오류는 `COMMON_001`, 비즈니스/인증 오류는 개별 에러 코드로 유지하도록 문서를 정리했다.
+
+### 정산 조회 API 구현
+
+- `SettlementController`, `SettlementUseCase`, 정산 응답 DTO를 추가해 크리에이터 월별 정산 조회와 운영자 정산 집계 조회 흐름을 구현했다.
+- 내부 집계용 `SettlementMetrics`와 날짜 유틸을 활용해 정산 계산 로직과 기간 경계 처리를 공통화했다.

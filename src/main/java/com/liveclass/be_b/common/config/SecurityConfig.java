@@ -53,6 +53,7 @@ public class SecurityConfig {
                                 "/creator/login",
                                 "/admin/login"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.GET,"/creator/settlements/monthly").hasRole("CREATOR")
                         .requestMatchers(HttpMethod.POST, "/sales").permitAll()
                         .requestMatchers(HttpMethod.POST, "/sales/*/cancellations").permitAll()
                         .requestMatchers(HttpMethod.GET, "/sales").hasRole("CREATOR")

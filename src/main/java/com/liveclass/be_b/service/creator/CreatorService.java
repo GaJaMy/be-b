@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class CreatorService {
@@ -17,5 +19,10 @@ public class CreatorService {
     public Creator findCreator(String creatorId) {
         return creatorRepository.findById(creatorId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_CREATOR));
+    }
+
+    @Transactional(readOnly = true)
+    public List<Creator> findAllCreators() {
+        return creatorRepository.findAll();
     }
 }
