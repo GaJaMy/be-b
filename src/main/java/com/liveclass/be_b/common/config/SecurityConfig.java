@@ -3,6 +3,8 @@ package com.liveclass.be_b.common.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.liveclass.be_b.security.jwt.JwtAuthenticationFilter;
 import com.liveclass.be_b.security.jwt.JwtProvider;
+import com.liveclass.be_b.security.handler.CustomAccessDeniedHandler;
+import com.liveclass.be_b.security.handler.CustomAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,6 +37,16 @@ public class SecurityConfig {
     }
 
     @Bean
+    public CustomAuthenticationEntryPoint customAuthenticationEntryPoint() {
+        return new CustomAuthenticationEntryPoint(objectMapper);
+    }
+
+    @Bean
+    public CustomAccessDeniedHandler customAccessDeniedHandler() {
+        return new CustomAccessDeniedHandler(objectMapper);
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -42,6 +54,10 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement(sessionManagement ->
                         sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .authenticationEntryPoint(customAuthenticationEntryPoint())
+                        .accessDeniedHandler(customAccessDeniedHandler())
+                )
                 .authorizeHttpRequests(auth -> auth
                         // Swagger 관련 경로 허용
                         .requestMatchers(
@@ -53,13 +69,12 @@ public class SecurityConfig {
                                 "/creator/login",
                                 "/admin/login"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.GET,"/creator/settlements/monthly").hasRole("CREATOR")
                         .requestMatchers(HttpMethod.POST, "/sales").permitAll()
                         .requestMatchers(HttpMethod.POST, "/sales/*/cancellations").permitAll()
                         .requestMatchers(HttpMethod.GET, "/sales").hasRole("CREATOR")
-                        .requestMatchers("/creator/**").hasRole("CREATOR")
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .anyRequest().authenticated()
+                        .requestMatchers(HttpMethod.GET,"/creator/settlements/monthly").hasRole("CREATOR")
+                        .requestMatchers(HttpMethod.GET, "/admin/settlements").hasRole("ADMIN")
+                        .anyRequest().permitAll()
                 )
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 

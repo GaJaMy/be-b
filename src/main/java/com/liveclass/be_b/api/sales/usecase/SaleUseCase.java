@@ -34,7 +34,7 @@ public class SaleUseCase {
                 course,
                 request.getStudentId(),
                 request.getAmount(),
-                request.getPaidAt().toLocalDateTime()
+                DateTimeUtil.toKstLocalDateTime(request.getPaidAt())
         );
 
         return SaleRegisterResponse.of(saleId);

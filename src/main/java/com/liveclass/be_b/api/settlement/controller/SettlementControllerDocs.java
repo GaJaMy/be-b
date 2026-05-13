@@ -18,7 +18,7 @@ public interface SettlementControllerDocs {
     ResponseEntity<ApiResponse<CreatorMonthlySettlementResponse>> queryCreatorSettlement(
             @AuthenticationPrincipal AuthenticatedPrincipal principal,
             @RequestParam("yearMonth")
-            @NotNull
+            @NotNull(message = "조회 연월은 필수입니다.")
             @DateTimeFormat(pattern = "yyyy-MM")
             YearMonth yearMonth
     );
@@ -26,12 +26,12 @@ public interface SettlementControllerDocs {
     ResponseEntity<ApiResponse<AdminSettlementSummaryResponse>> queryAdminSettlementSummary(
             @AuthenticationPrincipal AuthenticatedPrincipal principal,
             @RequestParam(name = "from")
-            @NotNull
+            @NotNull(message = "조회 시작일은 필수입니다.")
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate from,
 
             @RequestParam(name = "to")
-            @NotNull
+            @NotNull(message = "조회 종료일은 필수입니다.")
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate to
     );

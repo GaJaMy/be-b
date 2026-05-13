@@ -43,12 +43,12 @@ public class SaleController implements SaleControllerDocs{
     public ResponseEntity<ApiResponse<List<SaleQueryResponse>>> querySale(
             @AuthenticationPrincipal AuthenticatedPrincipal principal,
             @RequestParam(name = "from")
-            @NotNull
+            @NotNull(message = "조회 시작일은 필수입니다.")
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate from,
 
             @RequestParam(name = "to")
-            @NotNull
+            @NotNull(message = "조회 종료일은 필수입니다.")
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate to
     ) {

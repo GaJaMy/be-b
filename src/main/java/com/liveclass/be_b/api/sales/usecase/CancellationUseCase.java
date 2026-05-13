@@ -2,6 +2,7 @@ package com.liveclass.be_b.api.sales.usecase;
 
 import com.liveclass.be_b.api.sales.dto.request.CancellationRegisterRequest;
 import com.liveclass.be_b.api.sales.dto.response.CancellationRegisterResponse;
+import com.liveclass.be_b.common.util.DateTimeUtil;
 import com.liveclass.be_b.domain.sale.entity.SaleRecord;
 import com.liveclass.be_b.service.cancellation.CancellationService;
 import com.liveclass.be_b.service.sale.SaleRecordService;
@@ -22,7 +23,7 @@ public class CancellationUseCase {
         String cancellationId = cancellationService.registerCancellation(
                 saleRecord,
                 request.getRefundAmount(),
-                request.getCanceledAt().toLocalDateTime()
+                DateTimeUtil.toKstLocalDateTime(request.getCanceledAt())
         );
 
         return CancellationRegisterResponse.of(cancellationId);
