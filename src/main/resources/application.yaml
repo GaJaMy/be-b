@@ -27,7 +27,7 @@ spring:
 jwt:
   admin:
     secret: ${ADMIN_JWT_SECRET}
-    access-token-expiry: 1800000
+    access-token-expiry: 86400000
   creator:
     secret: ${CREATOR_JWT_SECRET}
-    access-token-expiry: 1800000
+    access-token-expiry: 86400000
