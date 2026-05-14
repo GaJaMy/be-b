@@ -22,9 +22,15 @@ public enum ErrorCode {
 
     NOT_FOUND_COURSE("COURSE_001", "강의를 찾을 수 없습니다.", 404),
 
-    NOT_FOUND_SALE("SALE_001", "판매 내역을 찾을 수 없습니다..", 404),
+    NOT_FOUND_SALE("SALE_001", "판매 내역을 찾을 수 없습니다.", 404),
+    DUPLICATE_SALE("SALE_002", "이미 존재하는 판매 ID 입니다.", 409),
+
+    DUPLICATE_CANCELLATION("CANCELLATION_002", "이미 존재하는 취소 ID 입니다.", 409),
+    INVALID_CANCELLATION_DATE("CANCELLATION_003", "취소 일시는 결제 일시보다 빠를 수 없습니다.", 422),
+    OVER_SALE_AMOUNT("CANCELLATION_004", "환불 금액이 원 결제 금액을 초과할 수 없습니다.", 422),
 
     NOT_FOUND_FEE_POLICY("FEE_POLICY_001", "수수료율 정책을 찾을 수 없습니다.", 404),
+    DUPLICATE_FEE_POLICY_HISTORY("FEE_POLICY_002", "동일한 변경 기준 시각의 수수료율 이력이 이미 존재합니다.", 409),
 
     ALREADY_EXISTS_SETTLEMENT("SETTLEMENT_006", "동일 연월 정산이 이미 존재합니다.", 409),
     SETTLEMENT_MONTH_NOT_CLOSED("SETTLEMENT_007", "대상 월이 종료되기 전에는 정산을 생성할 수 없습니다.", 400),

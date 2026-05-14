@@ -211,24 +211,43 @@ public class SettlementUseCase {
 
         long netSalesAmount = grossSalesAmount - refundAmount;
         Map<Integer, Long> netSalesAmountByFeeRatePercent = new HashMap<>();
-        saleRecords.forEach(saleRecord ->
-                netSalesAmountByFeeRatePercent.merge(
-                        saleRecord.getFeeRatePercent(),
-                        saleRecord.getAmount(),
-                        Long::sum
-                )
-        );
-        cancellationRecords.forEach(cancellationRecord ->
-                netSalesAmountByFeeRatePercent.merge(
-                        cancellationRecord.getSaleRecord().getFeeRatePercent(),
-                        -cancellationRecord.getRefundAmount(),
-                        Long::sum
-                )
-        );
 
-        long platformFeeAmount = netSalesAmountByFeeRatePercent.entrySet().stream()
-                .mapToLong(entry -> calculateFeeAmount(entry.getValue(), entry.getKey()))
-                .sum();
+        for (SaleRecord saleRecord : saleRecords) {
+            Integer feeRatePercent = saleRecord.getFeeRatePercent();
+            Long currentNetSalesAmount = netSalesAmountByFeeRatePercent.get(feeRatePercent);
+
+            if (currentNetSalesAmount == null) {
+                netSalesAmountByFeeRatePercent.put(feeRatePercent, saleRecord.getAmount());
+                continue;
+            }
+
+            long updatedNetSalesAmount = currentNetSalesAmount + saleRecord.getAmount();
+            netSalesAmountByFeeRatePercent.put(feeRatePercent, updatedNetSalesAmount);
+        }
+
+        for (CancellationRecord cancellationRecord : cancellationRecords) {
+            Integer feeRatePercent = cancellationRecord.getSaleRecord().getFeeRatePercent();
+            Long currentNetSalesAmount = netSalesAmountByFeeRatePercent.get(feeRatePercent);
+            long refundAmountForFeeRate = cancellationRecord.getRefundAmount();
+
+            if (currentNetSalesAmount == null) {
+                netSalesAmountByFeeRatePercent.put(feeRatePercent, -refundAmountForFeeRate);
+                continue;
+            }
+
+            long updatedNetSalesAmount = currentNetSalesAmount - refundAmountForFeeRate;
+            netSalesAmountByFeeRatePercent.put(feeRatePercent, updatedNetSalesAmount);
+        }
+
+        long platformFeeAmount = 0L;
+        for (Map.Entry<Integer, Long> entry : netSalesAmountByFeeRatePercent.entrySet()) {
+            Integer feeRatePercent = entry.getKey();
+            Long amountByFeeRatePercent = entry.getValue();
+
+            long feeAmount = calculateFeeAmount(amountByFeeRatePercent, feeRatePercent);
+            platformFeeAmount += feeAmount;
+        }
+
         long expectedPayoutAmount = netSalesAmount - platformFeeAmount;
 
         return new SettlementMetrics(
@@ -243,6 +262,10 @@ public class SettlementUseCase {
     }
 
     private long calculateFeeAmount(Long amount, Integer feeRatePercent) {
+        if (amount <= 0) {
+            return 0L;
+        }
+
         return BigDecimal.valueOf(amount)
                 .multiply(BigDecimal.valueOf(feeRatePercent))
                 .divide(BigDecimal.valueOf(100), 0, RoundingMode.CEILING)

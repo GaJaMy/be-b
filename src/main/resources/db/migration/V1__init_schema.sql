@@ -39,7 +39,7 @@ CREATE TABLE sale_record (
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
     CONSTRAINT pk_sale_record PRIMARY KEY (id),
-    CONSTRAINT ck_sale_record_amount_positive CHECK (amount > 0)
+    CONSTRAINT ck_sale_record_amount_non_negative CHECK (amount >= 0)
 );
 
 CREATE TABLE cancellation_record (
@@ -51,7 +51,7 @@ CREATE TABLE cancellation_record (
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
     CONSTRAINT pk_cancellation_record PRIMARY KEY (id),
-    CONSTRAINT ck_cancellation_record_refund_amount_positive CHECK (refund_amount > 0)
+    CONSTRAINT ck_cancellation_record_refund_amount_non_negative CHECK (refund_amount >= 0)
 );
 
 CREATE INDEX idx_course_creator_id ON course (creator_id);

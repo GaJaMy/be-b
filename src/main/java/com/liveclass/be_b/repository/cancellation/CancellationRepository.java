@@ -13,6 +13,13 @@ import java.util.List;
 public interface CancellationRepository extends JpaRepository<CancellationRecord, String> {
 
     @Query("""
+            select coalesce(sum(cr.refundAmount), 0)
+            from CancellationRecord cr
+            where cr.saleRecord = :saleRecord
+            """)
+    Long sumRefundAmountBySaleRecord(@Param("saleRecord") SaleRecord saleRecord);
+
+    @Query("""
             select cr
             from CancellationRecord cr
             join fetch cr.saleRecord sr

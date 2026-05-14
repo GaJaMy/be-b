@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.YearMonth;
 
 public final class DateTimeUtil {
@@ -31,5 +32,9 @@ public final class DateTimeUtil {
     public static LocalDateTime toKstLocalDateTime(OffsetDateTime offsetDateTime) {
         return offsetDateTime.atZoneSameInstant(KST_ZONE_ID)
                 .toLocalDateTime();
+    }
+
+    public static OffsetDateTime toKstOffsetDateTime(LocalDateTime localDateTime) {
+        return localDateTime.atOffset(ZoneOffset.ofHours(9));
     }
 }

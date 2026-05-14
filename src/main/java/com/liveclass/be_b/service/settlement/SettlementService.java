@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -37,8 +38,8 @@ public class SettlementService {
             SettlementMetrics settlementMetrics,
             LocalDateTime requestedAt
     ) {
-        long count = settlementRepository.count();
-        String settlementId = String.format("%s-%d", SETTLEMENT_ID_PREFIX, count);
+        String uuid = UUID.randomUUID().toString();
+        String settlementId = String.format("%s-%s", SETTLEMENT_ID_PREFIX, uuid);
 
         Settlement settlement = Settlement.create(
                 settlementId,

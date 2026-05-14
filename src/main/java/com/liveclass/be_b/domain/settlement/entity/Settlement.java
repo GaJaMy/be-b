@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Table(
         name = "settlement",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_settlement_creator_year_month", columnNames = {"creator_id", "year_month"})
+                @UniqueConstraint(name = "uk_settlement_creator_year_month", columnNames = {"creator_id", "settlement_year_month"})
         }
 )
 @Getter
@@ -31,7 +31,7 @@ public class Settlement extends BaseEntity {
     @JoinColumn(name = "creator_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private Creator creator;
 
-    @Column(name = "year_month", length = 7, nullable = false)
+    @Column(name = "settlement_year_month", length = 7, nullable = false)
     private String yearMonth;
 
     @Column(name = "gross_sales_amount", nullable = false)

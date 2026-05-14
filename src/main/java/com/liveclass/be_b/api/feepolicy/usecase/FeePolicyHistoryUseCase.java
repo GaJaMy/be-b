@@ -3,13 +3,13 @@ package com.liveclass.be_b.api.feepolicy.usecase;
 import com.liveclass.be_b.api.feepolicy.dto.request.FeePolicyHistoryRegisterRequest;
 import com.liveclass.be_b.api.feepolicy.dto.response.FeePolicyHistoryQueryResponse;
 import com.liveclass.be_b.api.feepolicy.dto.response.FeePolicyHistoryRegisterResponse;
+import com.liveclass.be_b.common.util.DateTimeUtil;
 import com.liveclass.be_b.domain.feepolicy.entity.FeePolicyHistory;
 import com.liveclass.be_b.service.feepolicy.FeePolicyHistoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.YearMonth;
 import java.util.List;
 
 @Component
@@ -20,13 +20,13 @@ public class FeePolicyHistoryUseCase {
     @Transactional
     public FeePolicyHistoryRegisterResponse registerFeePolicyHistory(FeePolicyHistoryRegisterRequest request) {
         FeePolicyHistory feePolicyHistory = feePolicyHistoryService.registerFeePolicyHistory(
-                request.getTargetYearMonth(),
+                DateTimeUtil.toKstLocalDateTime(request.getEffectiveStartedAt()),
                 request.getFeeRatePercent()
         );
 
         return FeePolicyHistoryRegisterResponse.of(
                 feePolicyHistory.getId(),
-                YearMonth.parse(feePolicyHistory.getTargetYearMonth()),
+                DateTimeUtil.toKstOffsetDateTime(feePolicyHistory.getEffectiveStartedAt()),
                 feePolicyHistory.getFeeRatePercent()
         );
     }
@@ -36,7 +36,7 @@ public class FeePolicyHistoryUseCase {
         return feePolicyHistoryService.findAllFeePolicyHistories().stream()
                 .map(feePolicyHistory -> FeePolicyHistoryQueryResponse.builder()
                         .feePolicyHistoryId(feePolicyHistory.getId())
-                        .targetYearMonth(YearMonth.parse(feePolicyHistory.getTargetYearMonth()))
+                        .effectiveStartedAt(DateTimeUtil.toKstOffsetDateTime(feePolicyHistory.getEffectiveStartedAt()))
                         .feeRatePercent(feePolicyHistory.getFeeRatePercent())
                         .build()
                 )

@@ -16,21 +16,20 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class SaleRecordService {
-    private final static String SALE_ID_PREFIX = "sale";
-
     private final SaleRecordRepository saleRecordRepository;
 
     @Transactional
     public String registerSale(
             Course course,
+            String saleId,
             String studentId,
             Long amount,
             Integer feeRatePercent,
             LocalDateTime paidAt
     ) {
-        long count = saleRecordRepository.count();
-
-        String saleId = String.format("%s-%d", SALE_ID_PREFIX, count);
+        if (saleRecordRepository.existsById(saleId)) {
+            throw new BusinessException(ErrorCode.DUPLICATE_SALE);
+        }
 
         SaleRecord saleRecord =
                 SaleRecord.create(saleId, course, course.getCreator(), studentId, amount, feeRatePercent, paidAt);

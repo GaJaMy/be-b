@@ -11,6 +11,14 @@
 - 정산 기준 시간대는 KST(`Asia/Seoul`)이다.
 - 금액 단위는 원이며 정수로 처리한다.
 
+## API 성격 구분
+- 예상 정산 조회 API
+  - 원천 판매/취소 데이터를 기준으로 계산 결과만 조회한다.
+  - 실제 `settlement` 테이블을 생성하거나 수정하지 않는다.
+- 실제 정산 관리 API
+  - `settlement` 테이블에 데이터를 생성하거나 상태를 변경한다.
+  - `PENDING`, `CONFIRMED`, `PAID` 상태 관리에 직접 영향을 준다.
+
 ## 인증 규칙
 - 로그인 API는 인증 없이 호출 가능하다.
 - 판매 등록과 취소 등록 API는 현재 단계에서 인증 없이 호출 가능하다.
@@ -123,6 +131,7 @@ Request
 
 ```json
 {
+  "saleId": "sale-1",
   "courseId": "course-1",
   "studentId": "student-1",
   "amount": 50000,
@@ -131,8 +140,10 @@ Request
 ```
 
 비고
-- `saleId`는 요청으로 받지 않고 서버에서 생성한다.
+- 이 API는 과제 검증용 데이터 입력 API로 보고 `saleId`를 요청에서 직접 받는다.
+- 이미 존재하는 `saleId`로 등록하면 중복 오류를 반환한다.
 - 판매 등록 시점의 현재 수수료율을 `sale_record.fee_rate_percent`에 함께 저장한다.
+- 운영자가 수수료율을 변경하면 그 시점 이후 등록되는 판매부터 변경된 수수료율을 사용한다.
 
 Response
 
@@ -189,13 +200,15 @@ Request
 
 ```json
 {
+  "cancelId": "cancel-1",
   "refundAmount": 80000,
   "canceledAt": "2025-03-25T18:00:00+09:00"
 }
 ```
 
 비고
-- `cancelId`는 요청으로 받지 않고 서버에서 생성한다.
+- 이 API는 과제 검증용 데이터 입력 API로 보고 `cancelId`를 요청에서 직접 받는다.
+- 이미 존재하는 `cancelId`로 등록하면 중복 오류를 반환한다.
 
 Response
 
@@ -244,10 +257,13 @@ Response
 ```
 
 비고
+- 이 API는 예상 정산 조회 API이다.
 - 조회 주체는 인증된 크리에이터 자신으로 제한한다.
 - 판매는 `paidAt`, 취소는 `canceledAt` 기준으로 집계한다.
 - 판매분은 각 판매에 저장된 `feeRatePercent` 기준으로 묶고, 환불분은 원본 판매의 `feeRatePercent` 기준으로 차감해 수수료율별 순액을 만든 뒤 계산한다.
 - 모든 판매의 수수료율이 같으면 `플랫폼 수수료 = 순 판매 금액의 수수료율%` 공식과 동일한 결과가 된다.
+- `platformFeeAmount`는 최소 0원이다.
+- `expectedPayoutAmount`가 음수일 수 있으며, 이는 해당 정산에서 지급이 아니라 차감으로 처리되어야 할 금액이 발생했음을 의미한다.
 
 ## 5. 운영자 정산 API
 과제 원문 기준 필수 API이다.
@@ -288,6 +304,12 @@ Response
 }
 ```
 
+비고
+- 이 API는 예상 정산 조회 API이다.
+- 실제 `settlement`를 조회하는 API가 아니라, 현재 원천 데이터 기준 예상 정산 합계를 계산해서 보여준다.
+- `platformFeeAmount`는 최소 0원이다.
+- `expectedPayoutAmount`가 음수일 수 있으며, 이는 해당 정산에서 지급이 아니라 차감으로 처리되어야 할 금액이 발생했음을 의미한다.
+
 ## 6. 추가 요구 정산 관리 API
 추가 요구로 반영하는 API이다.
 
@@ -305,6 +327,7 @@ Request
 ```
 
 비고
+- 이 API는 실제 정산 관리 API이다.
 - 정산 대상 월이 종료된 이후에만 생성할 수 있다.
 - 동일한 `creatorId + yearMonth` 조합의 정산은 하나만 생성할 수 있다.
 - 생성 시 초기 상태는 `PENDING`이다.
@@ -335,6 +358,7 @@ Query Parameters
 | `to` | `string` | Y | 조회 종료 연월, 예: `2025-05` |
 
 비고
+- 이 API는 실제 정산 관리 API이다.
 - `from`, `to`는 정산 대상 연월 기준이며 양 끝 연월을 포함한다.
 - 목록 응답에 정산 상세에 필요한 필드를 함께 내려주므로 별도 상세 조회 API는 두지 않는다.
 
@@ -378,6 +402,7 @@ Query Parameters
 | `to` | `string` | Y | 조회 종료 연월, 예: `2025-05` |
 
 비고
+- 이 API는 실제 정산 관리 API이다.
 - `from`, `to`는 정산 대상 연월 기준이며 양 끝 연월을 포함한다.
 - 목록 응답에 정산 상세에 필요한 필드를 함께 내려주므로 별도 상세 조회 API는 두지 않는다.
 
@@ -414,6 +439,10 @@ Response
 - Path: `/admin/settlement-management/{settlementId}/confirm`
 - Auth: `ROLE_ADMIN`
 
+비고
+- 이 API는 실제 정산 관리 API이다.
+- 대상 정산의 상태를 `PENDING -> CONFIRMED`로 변경한다.
+
 Response
 
 ```json
@@ -431,6 +460,10 @@ Response
 - Method: `POST`
 - Path: `/admin/settlement-management/{settlementId}/pay`
 - Auth: `ROLE_ADMIN`
+
+비고
+- 이 API는 실제 정산 관리 API이다.
+- 대상 정산의 상태를 `CONFIRMED -> PAID`로 변경한다.
 
 Response
 
@@ -464,7 +497,8 @@ Request
 비고
 - `fee_policy`는 현재 적용할 수수료율을 저장하는 단일 row 설정이다.
 - 요청과 응답의 `feeRatePercent`는 정수 퍼센트 값이며, 서버도 퍼센트 정수로 저장한다.
-- 이 API는 현재 수수료율만 변경하며, 과거 `fee_policy_history`는 수정하지 않는다.
+- 이 API는 현재 수수료율을 즉시 변경한다.
+- 변경 이후 등록되는 판매는 변경된 수수료율을 `sale_record.fee_rate_percent`에 저장한다.
 - 변경된 현재 수수료율은 이후 판매 등록 시 `sale_record.fee_rate_percent`에 저장될 기준값으로 사용한다.
 
 Response
@@ -488,16 +522,15 @@ Request
 
 ```json
 {
-  "targetYearMonth": "2025-03",
+  "effectiveStartedAt": "2025-05-14T15:00:00+09:00",
   "feeRatePercent": 20
 }
 ```
 
 비고
 - 요청과 응답의 `feeRatePercent`는 정수 퍼센트 값이며, 서버도 퍼센트 정수로 저장한다.
-- 요청한 수수료율을 기준으로 해당 기준 연월의 `fee_policy_history`를 생성한다.
-- 한 연월에는 하나의 수수료율 이력만 등록할 수 있다.
-- 이미 해당 연월의 이력이 존재하면 중복 등록하지 않는다.
+- 요청한 수수료율과 변경 적용 시각을 기준으로 `fee_policy_history`를 생성한다.
+- 수수료율 변경 이력은 운영 변경 내역 조회를 위한 기록이다.
 - `fee_policy_history`는 수수료율 변경 내역 조회용이며, 정산 계산은 판매 당시 `sale_record.fee_rate_percent`를 기준으로 한다.
 
 Response
@@ -508,7 +541,7 @@ Response
   "msg": "ok",
   "data": {
     "feePolicyHistoryId": "fee-policy-history-1",
-    "targetYearMonth": "2025-03",
+    "effectiveStartedAt": "2025-05-14T15:00:00+09:00",
     "feeRatePercent": 20
   }
 }
@@ -528,7 +561,7 @@ Response
   "data": [
     {
       "feePolicyHistoryId": "fee-policy-history-1",
-      "targetYearMonth": "2025-03",
+      "effectiveStartedAt": "2025-05-14T15:00:00+09:00",
       "feeRatePercent": 20
     }
   ]
@@ -565,6 +598,7 @@ Response
 | 코드 | HTTP | 설명 |
 | --- | --- | --- |
 | `SALE_001` | `404` | 판매 내역을 찾을 수 없음 |
+| `SALE_002` | `409` | 이미 존재하는 판매 ID |
 | `SALE_005` | `403` | 자신의 판매 내역만 조회할 수 있음 |
 
 ### CANCELLATION
@@ -572,6 +606,8 @@ Response
 | 코드 | HTTP | 설명 |
 | --- | --- | --- |
 | `CANCELLATION_001` | `404` | 취소 대상 판매 내역을 찾을 수 없음 |
+| `CANCELLATION_002` | `409` | 이미 존재하는 취소 ID |
+| `CANCELLATION_003` | `422` | 취소 일시가 원본 판매의 결제 일시보다 빠를 수 없음 |
 | `CANCELLATION_004` | `422` | 환불 금액이 원 결제 금액을 초과함 |
 
 ### SETTLEMENT
@@ -592,7 +628,7 @@ Response
 | 코드 | HTTP | 설명 |
 | --- | --- | --- |
 | `FEE_POLICY_001` | `404` | 현재 수수료율 정책 또는 수수료율 이력을 찾을 수 없음 |
-| `FEE_POLICY_002` | `409` | 해당 연월의 수수료율 이력이 이미 존재함 |
+| `FEE_POLICY_002` | `409` | 동일한 변경 기준 시각의 수수료율 이력이 이미 존재함 |
 
 ### COMMON
 

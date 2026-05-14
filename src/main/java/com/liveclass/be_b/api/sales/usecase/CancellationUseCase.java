@@ -21,6 +21,7 @@ public class CancellationUseCase {
         SaleRecord saleRecord = saleRecordService.findSaleRecord(saleId);
 
         String cancellationId = cancellationService.registerCancellation(
+                request.getCancelId(),
                 saleRecord,
                 request.getRefundAmount(),
                 DateTimeUtil.toKstLocalDateTime(request.getCanceledAt())

@@ -1,3 +1,11 @@
+INSERT INTO creator (id, login_id, password_hash, name, created_at, updated_at)
+VALUES ('creator-1', 'creator-1', '$2y$10$iEGXcQdYBIeABw0f81dG2.oamhoLLzeRd3l3OpHCrHMvJdxdCcA22', '김강사', '2025-03-01 00:00:00', '2025-03-01 00:00:00'),
+       ('creator-2', 'creator-2', '$2y$10$iEGXcQdYBIeABw0f81dG2.oamhoLLzeRd3l3OpHCrHMvJdxdCcA22', '이강사', '2025-03-01 00:00:00', '2025-03-01 00:00:00'),
+       ('creator-3', 'creator-3', '$2y$10$iEGXcQdYBIeABw0f81dG2.oamhoLLzeRd3l3OpHCrHMvJdxdCcA22', '박강사', '2025-03-01 00:00:00', '2025-03-01 00:00:00');
+
+INSERT INTO admin (id, login_id, password_hash, name, created_at, updated_at)
+VALUES ('admin-1', 'admin-1', '$2y$10$iEGXcQdYBIeABw0f81dG2.oamhoLLzeRd3l3OpHCrHMvJdxdCcA22', '서관리자', '2025-03-01 00:00:00', '2025-03-01 00:00:00');
+
 INSERT INTO course (id, creator_id, title, created_at, updated_at)
 VALUES ('course-1', 'creator-1', 'Spring Boot 입문', '2025-03-01 00:00:00', '2025-03-01 00:00:00'),
        ('course-2', 'creator-1', 'JPA 실전', '2025-03-01 00:00:00', '2025-03-01 00:00:00'),

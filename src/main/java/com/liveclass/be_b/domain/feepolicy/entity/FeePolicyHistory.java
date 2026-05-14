@@ -10,11 +10,13 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(
         name = "fee_policy_history",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_fee_policy_history_target_year_month", columnNames = "target_year_month")
+                @UniqueConstraint(name = "uk_fee_policy_history_effective_started_at", columnNames = "effective_started_at")
         }
 )
 @Getter
@@ -28,15 +30,15 @@ public class FeePolicyHistory extends BaseEntity {
     @Column(name = "fee_rate_percent", nullable = false)
     private Integer feeRatePercent;
 
-    @Column(name = "target_year_month", length = 7, nullable = false)
-    private String targetYearMonth;
+    @Column(name = "effective_started_at", nullable = false)
+    private LocalDateTime effectiveStartedAt;
 
-    public static FeePolicyHistory create(String id, Integer feeRatePercent, String targetYearMonth) {
+    public static FeePolicyHistory create(String id, Integer feeRatePercent, LocalDateTime effectiveStartedAt) {
         FeePolicyHistory feePolicyHistory = new FeePolicyHistory();
 
         feePolicyHistory.id = id;
         feePolicyHistory.feeRatePercent = feeRatePercent;
-        feePolicyHistory.targetYearMonth = targetYearMonth;
+        feePolicyHistory.effectiveStartedAt = effectiveStartedAt;
 
         return feePolicyHistory;
     }

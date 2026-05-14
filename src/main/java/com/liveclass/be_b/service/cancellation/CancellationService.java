@@ -1,5 +1,7 @@
 package com.liveclass.be_b.service.cancellation;
 
+import com.liveclass.be_b.common.exception.BusinessException;
+import com.liveclass.be_b.common.exception.ErrorCode;
 import com.liveclass.be_b.domain.cancellation.entity.CancellationRecord;
 import com.liveclass.be_b.domain.creator.entity.Creator;
 import com.liveclass.be_b.domain.sale.entity.SaleRecord;
@@ -14,14 +16,23 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class CancellationService {
-    private final static String CANCELLATION_ID_PREFIX = "cancel";
     private final CancellationRepository cancellationRepository;
 
     @Transactional
-    public String registerCancellation(SaleRecord saleRecord, Long refundAmount, LocalDateTime canceledAt) {
-        long count = cancellationRepository.count();
-        String cancelId = String.format("%s-%d", CANCELLATION_ID_PREFIX, count);
+    public String registerCancellation(String cancelId, SaleRecord saleRecord, Long refundAmount, LocalDateTime canceledAt) {
+        if (cancellationRepository.existsById(cancelId)) {
+            throw new BusinessException(ErrorCode.DUPLICATE_CANCELLATION);
+        }
 
+        if (canceledAt.isBefore(saleRecord.getPaidAt())) {
+            throw new BusinessException(ErrorCode.INVALID_CANCELLATION_DATE);
+        }
+
+        Long totalRefundAmount = cancellationRepository.sumRefundAmountBySaleRecord(saleRecord);
+        if (totalRefundAmount + refundAmount > saleRecord.getAmount()) {
+            throw new BusinessException(ErrorCode.OVER_SALE_AMOUNT);
+        }
+        
         CancellationRecord cancellationRecord =
                 CancellationRecord.create(cancelId, saleRecord, refundAmount, canceledAt);
 

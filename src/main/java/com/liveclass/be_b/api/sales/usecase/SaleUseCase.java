@@ -35,6 +35,7 @@ public class SaleUseCase {
 
         String saleId = saleRecordService.registerSale(
                 course,
+                request.getSaleId(),
                 request.getStudentId(),
                 request.getAmount(),
                 currentFeePolicyRatePercent,

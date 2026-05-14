@@ -31,7 +31,3 @@ jwt:
   creator:
     secret: ${CREATOR_JWT_SECRET}
     access-token-expiry: 1800000
-
-app:
-  seed:
-    activate: false
