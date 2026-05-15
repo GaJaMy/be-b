@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,8 @@ public interface FeePolicyHistoryControllerDocs {
 
     @Operation(
             summary = "수수료율 이력 등록",
-            description = "특정 시각부터 적용되는 수수료율 변경 이력을 등록한다."
+            description = "특정 시각부터 적용되는 수수료율 변경 이력을 등록한다.",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "수수료율 이력 등록 성공",
@@ -40,7 +42,8 @@ public interface FeePolicyHistoryControllerDocs {
 
     @Operation(
             summary = "수수료율 이력 목록 조회",
-            description = "등록된 수수료율 변경 이력을 적용 시작 시각 오름차순으로 조회한다."
+            description = "등록된 수수료율 변경 이력을 적용 시작 시각 오름차순으로 조회한다.",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "수수료율 이력 조회 성공",

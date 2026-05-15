@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface FeePolicyControllerDocs {
     @Operation(
             summary = "현재 수수료율 변경",
-            description = "현재 적용 수수료율을 즉시 변경한다. 이후 발생하는 판매부터 새 수수료율이 적용된다."
+            description = "현재 적용 수수료율을 즉시 변경한다. 이후 발생하는 판매부터 새 수수료율이 적용된다.",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "현재 수수료율 변경 성공",

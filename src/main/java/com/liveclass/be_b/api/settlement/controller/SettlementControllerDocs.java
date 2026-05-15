@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -34,7 +35,8 @@ public interface SettlementControllerDocs {
 
     @Operation(
             summary = "정산 생성",
-            description = "크리에이터가 대상 연월의 실제 정산 데이터를 생성한다. 생성된 정산 상태는 PENDING 이다."
+            description = "크리에이터가 대상 연월의 실제 정산 데이터를 생성한다. 생성된 정산 상태는 PENDING 이다.",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "정산 생성 성공",
@@ -51,7 +53,8 @@ public interface SettlementControllerDocs {
 
     @Operation(
             summary = "크리에이터 정산 목록 조회",
-            description = "생성된 실제 정산 데이터를 연월 범위로 조회한다. from, to는 모두 포함한다."
+            description = "생성된 실제 정산 데이터를 연월 범위로 조회한다. from, to는 모두 포함한다.",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "정산 목록 조회 성공",
@@ -77,7 +80,8 @@ public interface SettlementControllerDocs {
 
     @Operation(
             summary = "크리에이터 월별 예상 정산 조회",
-            description = "실제 settlement 테이블이 아니라 판매/취소 원천 데이터를 기준으로 해당 월의 예상 정산 금액을 계산해 조회한다."
+            description = "실제 settlement 테이블이 아니라 판매/취소 원천 데이터를 기준으로 해당 월의 예상 정산 금액을 계산해 조회한다.",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "예상 정산 조회 성공",
@@ -97,7 +101,8 @@ public interface SettlementControllerDocs {
 
     @Operation(
             summary = "운영자 정산 관리 목록 조회",
-            description = "생성된 실제 정산 데이터를 연월 범위로 조회한다. from, to는 모두 포함한다."
+            description = "생성된 실제 정산 데이터를 연월 범위로 조회한다. from, to는 모두 포함한다.",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "정산 관리 목록 조회 성공",
@@ -123,7 +128,8 @@ public interface SettlementControllerDocs {
 
     @Operation(
             summary = "정산 확정",
-            description = "PENDING 상태의 실제 정산을 CONFIRMED 상태로 변경한다."
+            description = "PENDING 상태의 실제 정산을 CONFIRMED 상태로 변경한다.",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "정산 확정 성공",
@@ -141,7 +147,8 @@ public interface SettlementControllerDocs {
 
     @Operation(
             summary = "정산 지급 처리",
-            description = "CONFIRMED 상태의 실제 정산을 PAID 상태로 변경한다."
+            description = "CONFIRMED 상태의 실제 정산을 PAID 상태로 변경한다.",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "정산 지급 처리 성공",
@@ -159,7 +166,8 @@ public interface SettlementControllerDocs {
 
     @Operation(
             summary = "운영자 예상 정산 집계 조회",
-            description = "실제 settlement 테이블이 아니라 판매/취소 원천 데이터를 기준으로 기간 내 전체 크리에이터 예상 정산 현황과 합계를 조회한다."
+            description = "실제 settlement 테이블이 아니라 판매/취소 원천 데이터를 기준으로 기간 내 전체 크리에이터 예상 정산 현황과 합계를 조회한다.",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "예상 정산 집계 조회 성공",
