@@ -28,10 +28,11 @@
 - Gradle
 
 ## 실행 방법
-### 1. 프로젝트 루트로 이동
+### 1. 리포지토리 클론 및 프로젝트 루트 이동
 
 ```bash
-cd /Users/howard/Desktop/personal/be-b
+git clone <repository-url>
+cd be-b
 ```
 
 ### 2. Docker Compose로 MySQL과 애플리케이션 실행
