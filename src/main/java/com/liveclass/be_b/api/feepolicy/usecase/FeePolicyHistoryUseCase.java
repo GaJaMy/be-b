@@ -34,12 +34,7 @@ public class FeePolicyHistoryUseCase {
     @Transactional(readOnly = true)
     public List<FeePolicyHistoryQueryResponse> queryFeePolicyHistories() {
         return feePolicyHistoryService.findAllFeePolicyHistories().stream()
-                .map(feePolicyHistory -> FeePolicyHistoryQueryResponse.builder()
-                        .feePolicyHistoryId(feePolicyHistory.getId())
-                        .effectiveStartedAt(DateTimeUtil.toKstOffsetDateTime(feePolicyHistory.getEffectiveStartedAt()))
-                        .feeRatePercent(feePolicyHistory.getFeeRatePercent())
-                        .build()
-                )
+                .map(FeePolicyHistoryQueryResponse::from)
                 .toList();
     }
 }

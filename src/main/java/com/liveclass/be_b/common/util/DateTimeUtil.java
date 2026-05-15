@@ -1,5 +1,8 @@
 package com.liveclass.be_b.common.util;
 
+import com.liveclass.be_b.common.exception.BusinessException;
+import com.liveclass.be_b.common.exception.ErrorCode;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -36,5 +39,17 @@ public final class DateTimeUtil {
 
     public static OffsetDateTime toKstOffsetDateTime(LocalDateTime localDateTime) {
         return localDateTime.atOffset(ZoneOffset.ofHours(9));
+    }
+
+    public static void validateDateRange(LocalDate from, LocalDate to) {
+        if (from.isAfter(to)) {
+            throw new BusinessException(ErrorCode.INVALID_DATE_RANGE);
+        }
+    }
+
+    public static void validateYearMonthRange(YearMonth from, YearMonth to) {
+        if (from.isAfter(to)) {
+            throw new BusinessException(ErrorCode.INVALID_DATE_RANGE);
+        }
     }
 }

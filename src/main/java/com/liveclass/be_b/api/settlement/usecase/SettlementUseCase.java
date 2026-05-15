@@ -75,7 +75,7 @@ public class SettlementUseCase {
 
     @Transactional(readOnly = true)
     public AdminSettlementSummaryResponse queryAdminSettlementSummary(LocalDate from, LocalDate to) {
-        validateDateRange(from, to);
+        DateTimeUtil.validateDateRange(from, to);
 
         List<Creator> allCreators = creatorService.findAllCreators();
         LocalDateTime fromDateTime = DateTimeUtil.startOfDay(from);
@@ -109,9 +109,6 @@ public class SettlementUseCase {
 
             SettlementMetrics settlementMetrics = calculateSettlementMetrics(saleRecords, cancellationRecords);
             long expectedPayoutAmount = settlementMetrics.expectedPayoutAmount();
-            if (expectedPayoutAmount == 0) {
-                continue;
-            }
 
             itemList.add(
                     AdminSettlementSummaryItemResponse.of(
@@ -135,7 +132,6 @@ public class SettlementUseCase {
         validateSettlementMonthClosed(yearMonth);
 
         Creator creator = creatorService.findCreator(creatorId);
-        settlementService.validateNotExists(creator, yearMonth);
 
         LocalDateTime from = DateTimeUtil.startOfMonth(yearMonth);
         LocalDateTime to = DateTimeUtil.endExclusiveOfMonth(yearMonth);
@@ -165,7 +161,7 @@ public class SettlementUseCase {
             YearMonth from,
             YearMonth to
     ) {
-        validateYearMonthRange(from, to);
+        DateTimeUtil.validateYearMonthRange(from, to);
 
         Creator creator = creatorService.findCreator(creatorId);
         return settlementService.queryCreatorSettlements(creator, from, to).stream()
@@ -178,7 +174,7 @@ public class SettlementUseCase {
             YearMonth from,
             YearMonth to
     ) {
-        validateYearMonthRange(from, to);
+        DateTimeUtil.validateYearMonthRange(from, to);
 
         return settlementService.queryAdminSettlements(from, to).stream()
                 .map(AdminSettlementManagementItemResponse::from)
@@ -276,18 +272,6 @@ public class SettlementUseCase {
         YearMonth currentYearMonth = YearMonth.now(KST_ZONE_ID);
         if (!yearMonth.isBefore(currentYearMonth)) {
             throw new BusinessException(ErrorCode.SETTLEMENT_MONTH_NOT_CLOSED);
-        }
-    }
-
-    private void validateYearMonthRange(YearMonth from, YearMonth to) {
-        if (from.isAfter(to)) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT);
-        }
-    }
-
-    private void validateDateRange(LocalDate from, LocalDate to) {
-        if (from.isAfter(to)) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT);
         }
     }
 

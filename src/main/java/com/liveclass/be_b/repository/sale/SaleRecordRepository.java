@@ -1,9 +1,10 @@
 package com.liveclass.be_b.repository.sale;
 
-import com.liveclass.be_b.domain.course.entity.Course;
 import com.liveclass.be_b.domain.creator.entity.Creator;
 import com.liveclass.be_b.domain.sale.entity.SaleRecord;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -32,6 +33,17 @@ public interface SaleRecordRepository extends JpaRepository<SaleRecord, String> 
                 where sr.id = :saleId
             """)
     Optional<SaleRecord> findByIdWithCreator(
+            @Param("saleId") String saleId
+    );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+                select sr
+                from SaleRecord sr
+                join fetch sr.creator
+                where sr.id = :saleId
+            """)
+    Optional<SaleRecord> findByIdWithCreatorWithLock(
             @Param("saleId") String saleId
     );
 

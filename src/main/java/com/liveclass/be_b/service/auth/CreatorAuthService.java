@@ -35,7 +35,7 @@ public class CreatorAuthService {
                 authenticationPrincipal.getPrincipalId(),
                 authenticationPrincipal.getUsername(),
                 authenticationPrincipal.getRole(),
-                AuthenticatedPrincipal.ADMIN_PRINCIPAL_TYPE
+                AuthenticatedPrincipal.CREATOR_PRINCIPAL_TYPE
         );
 
         return CreatorLoginResult.of(accessToken);

@@ -18,7 +18,7 @@ public class CancellationUseCase {
 
     @Transactional
     public CancellationRegisterResponse registerCancellation(String saleId, CancellationRegisterRequest request) {
-        SaleRecord saleRecord = saleRecordService.findSaleRecord(saleId);
+        SaleRecord saleRecord = saleRecordService.findSaleRecordWithLock(saleId);
 
         String cancellationId = cancellationService.registerCancellation(
                 request.getCancelId(),

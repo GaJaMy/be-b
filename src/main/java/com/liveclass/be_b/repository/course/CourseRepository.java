@@ -15,5 +15,5 @@ public interface CourseRepository extends JpaRepository<Course, String> {
       join fetch c.creator
       where c.id = :courseId
     """)
-    Optional<Course> findByIdWithCreator(@Param("courseId") String courseId);
+    Optional<Course> findByIdWithCreatorForSale(@Param("courseId") String courseId);
 }

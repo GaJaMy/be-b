@@ -7,6 +7,7 @@ import com.liveclass.be_b.domain.creator.entity.Creator;
 import com.liveclass.be_b.domain.sale.entity.SaleRecord;
 import com.liveclass.be_b.repository.cancellation.CancellationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,13 +33,17 @@ public class CancellationService {
         if (totalRefundAmount + refundAmount > saleRecord.getAmount()) {
             throw new BusinessException(ErrorCode.OVER_SALE_AMOUNT);
         }
-        
-        CancellationRecord cancellationRecord =
-                CancellationRecord.create(cancelId, saleRecord, refundAmount, canceledAt);
 
-        CancellationRecord save = cancellationRepository.save(cancellationRecord);
+        try {
+            CancellationRecord cancellationRecord =
+                    CancellationRecord.create(cancelId, saleRecord, refundAmount, canceledAt);
 
-        return save.getId();
+            CancellationRecord save = cancellationRepository.save(cancellationRecord);
+
+            return save.getId();
+        } catch (DataIntegrityViolationException e) {
+            throw new BusinessException(ErrorCode.DUPLICATE_CANCELLATION);
+        }
     }
 
     @Transactional(readOnly = true)

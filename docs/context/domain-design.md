@@ -23,7 +23,7 @@
 
 ### 3. Course
 - 크리에이터가 소유하는 강의
-- 필드 예시: `id`, `creatorId`, `title`, `createdAt`, `updatedAt`
+- 필드 예시: `id`, `creatorId`, `title`, `registeredAt`, `createdAt`, `updatedAt`
 - 관계:
   - `Creator` 1 : N `Course`
 
@@ -35,7 +35,7 @@
   - `Creator` 1 : N `SaleRecord`
 - 비고:
   - `creatorId`는 조회 성능과 정산 집계를 위해 중복 보관하는 편이 실용적이다.
-  - `feeRatePercent`는 판매 등록 시점의 현재 수수료율을 스냅샷으로 저장한다.
+  - `feeRatePercent`는 `paidAt` 이하에서 가장 최근의 `FeePolicyHistory`를 찾아 당시 유효한 수수료율을 스냅샷으로 저장한다.
   - 이후 현재 수수료율이나 수수료율 이력이 변경되어도 이미 등록된 판매의 수수료율은 바뀌지 않는다.
   - `paidAt`은 API 입력이 `OffsetDateTime`이어도 내부 저장은 KST 기준 `LocalDateTime`으로 정규화한다.
 
@@ -48,6 +48,7 @@
 - 비고:
   - 부분 환불을 허용하므로 환불 금액은 원 결제 금액 이하로 검증해야 한다.
   - `canceledAt`도 내부 저장은 KST 기준 `LocalDateTime`으로 정규화한다.
+  - 같은 판매에 대한 취소가 동시에 등록되면 누적 환불액 검증이 깨질 수 있으므로, 취소 등록 시 원본 `SaleRecord`를 비관적 쓰기 락으로 먼저 조회한 뒤 같은 트랜잭션 안에서 검증과 저장을 수행한다.
 
 ### 6. Settlement
 - 크리에이터가 특정 월에 대해 실제로 생성한 정산 데이터
@@ -126,7 +127,7 @@
 - 판매 집계 기준은 `paidAt`이다.
 - 취소 집계 기준은 `canceledAt`이다.
 - 월 경계는 KST 기준으로 계산한다.
-- 기본 플랫폼 수수료율은 `20%`이지만, 판매 등록 시점의 현재 수수료율을 `SaleRecord.feeRatePercent`에 저장한다.
+- 기본 플랫폼 수수료율은 `20%`이지만, 판매 등록 시에는 `paidAt` 기준으로 유효한 수수료율 이력을 찾아 `SaleRecord.feeRatePercent`에 저장한다.
 - 운영자가 현재 수수료율을 변경하면 그 변경은 즉시 적용되고, 이후 등록되는 판매부터 변경된 수수료율을 사용한다.
 - 판매분 수수료는 해당 판매의 `SaleRecord.feeRatePercent`를 기준으로 계산한다.
 - 환불분 수수료 차감은 취소 시점의 현재 수수료율이 아니라 원본 판매의 `SaleRecord.feeRatePercent`를 기준으로 계산한다.
@@ -173,6 +174,8 @@
 - API 입력 시각은 `OffsetDateTime`으로 받더라도 내부 저장과 정산 계산은 KST 기준으로 통일한다.
 - `Settlement`는 응답 DTO가 아니라 실제 관리 대상 엔티티이므로, 원천 데이터와 별도로 상태를 가진다.
 - 중복 정산 방지는 애플리케이션 검증과 DB 유니크 제약을 함께 두는 편이 안전하다.
-- 현재 수수료율은 `FeePolicy`, 변경 이력 조회는 `FeePolicyHistory`, 판매 당시 계산 기준은 `SaleRecord.feeRatePercent`로 역할을 분리한다.
-- 수수료율 이력은 정산 계산의 직접 기준이 아니라 운영 변경 내역을 추적하기 위한 기록이다.
+- 현재 수수료율은 `FeePolicy`, 변경 이력은 `FeePolicyHistory`, 판매 당시 계산 기준은 `SaleRecord.feeRatePercent`로 역할을 분리한다.
+- 수수료율 이력은 정산 계산 시 직접 조인하지 않지만, 판매 등록 시 당시 유효한 수수료율을 찾는 기준으로 사용한다.
+- 유니크 키 기반 생성은 사전 조회만으로 완전히 안전하지 않으므로, 저장 시점의 DB 유니크 충돌도 비즈니스 예외로 변환한다.
+- 취소 등록의 누적 환불 검증은 집계값만 잠그는 방식으로는 안전하지 않으므로, 기준 자원인 `SaleRecord`를 락으로 보호한다.
 - 테스트는 판매/취소 원천 데이터와 정산 생성 이후 상태 전이 시나리오를 모두 검증할 수 있어야 한다.

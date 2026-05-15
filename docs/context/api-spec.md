@@ -10,6 +10,7 @@
 - 시간 값은 ISO-8601 형식을 사용한다.
 - 정산 기준 시간대는 KST(`Asia/Seoul`)이다.
 - 금액 단위는 원이며 정수로 처리한다.
+- 날짜 조회 파라미터는 KST 기준 비즈니스 날짜로 해석한다.
 
 ## API 성격 구분
 - 예상 정산 조회 API
@@ -119,6 +120,41 @@ Response
 }
 ```
 
+## 1.5 강의 등록 API
+테스트용 원천 데이터 입력을 위해 추가한 API이다.
+
+### 1.5.1 강의 등록
+- Method: `POST`
+- Path: `/courses`
+- Auth: 없음
+
+Request
+
+```json
+{
+  "courseId": "course-1",
+  "creatorId": "creator-1",
+  "title": "Spring Boot 입문",
+  "registeredAt": "2025-03-01T00:00:00+09:00"
+}
+```
+
+비고
+- 이 API는 과제 검증용 데이터 입력 API이다.
+- 이미 존재하는 `courseId`로 등록하면 중복 오류를 반환한다.
+
+Response
+
+```json
+{
+  "errorCode": "SUCCESS",
+  "msg": "ok",
+  "data": {
+    "courseId": "course-1"
+  }
+}
+```
+
 ## 2. 판매 API
 과제 원문 기준 필수 API이다.
 
@@ -142,8 +178,8 @@ Request
 비고
 - 이 API는 과제 검증용 데이터 입력 API로 보고 `saleId`를 요청에서 직접 받는다.
 - 이미 존재하는 `saleId`로 등록하면 중복 오류를 반환한다.
-- 판매 등록 시점의 현재 수수료율을 `sale_record.fee_rate_percent`에 함께 저장한다.
-- 운영자가 수수료율을 변경하면 그 시점 이후 등록되는 판매부터 변경된 수수료율을 사용한다.
+- 판매 등록 시 `paidAt` 이하에서 가장 최근의 `fee_policy_history.effective_started_at` 이력을 찾아 해당 시점의 수수료율을 `sale_record.fee_rate_percent`에 함께 저장한다.
+- 운영자가 수수료율을 변경하면 변경 시점 이후의 `paidAt`을 가진 판매부터 변경된 수수료율을 사용한다.
 
 Response
 
@@ -166,8 +202,8 @@ Query Parameters
 
 | 이름 | 타입 | 필수 | 설명 |
 | --- | --- | --- | --- |
-| `from` | `string` | N | 조회 시작일시 |
-| `to` | `string` | N | 조회 종료일시 |
+| `from` | `string` | Y | 조회 시작일, `yyyy-MM-dd`, KST 기준 |
+| `to` | `string` | Y | 조회 종료일, `yyyy-MM-dd`, KST 기준 |
 
 Response
 
@@ -209,6 +245,7 @@ Request
 비고
 - 이 API는 과제 검증용 데이터 입력 API로 보고 `cancelId`를 요청에서 직접 받는다.
 - 이미 존재하는 `cancelId`로 등록하면 중복 오류를 반환한다.
+- 같은 `saleId`에 대한 동시 취소 등록으로 누적 환불 검증이 깨지지 않도록, 원본 판매를 비관적 쓰기 락으로 먼저 조회한 뒤 같은 트랜잭션 안에서 환불 합계 검증과 저장을 수행한다.
 
 Response
 
@@ -277,8 +314,8 @@ Query Parameters
 
 | 이름 | 타입 | 필수 | 설명 |
 | --- | --- | --- | --- |
-| `from` | `string` | Y | 조회 시작일시 |
-| `to` | `string` | Y | 조회 종료일시 |
+| `from` | `string` | Y | 조회 시작일, `yyyy-MM-dd`, KST 기준 |
+| `to` | `string` | Y | 조회 종료일, `yyyy-MM-dd`, KST 기준 |
 
 Response
 
@@ -481,6 +518,14 @@ Response
 ## 7. 추가 요구 수수료율 API
 추가 요구로 반영하는 API이다.
 
+### 7.0 사용 규칙
+- `PATCH /admin/fee-policy`는 현재 시점부터 적용되는 운영 수수료율을 변경하는 API이다.
+- 이 API를 호출하면 현재 수수료율(`fee_policy`)을 변경하고, 같은 시점의 변경 이력도 함께 기록한다.
+- `POST /admin/fee-policy-histories`는 과거 또는 임의 시점의 수수료율 이력을 명시적으로 생성하기 위한 보조 API이다.
+- 판매 등록은 `FeePolicy`의 현재값이 아니라, `paidAt` 이하에서 가장 최근의 `FeePolicyHistory`를 조회해 수수료율을 결정한다.
+- 따라서 과거 시점 판매 데이터를 검증하려면 먼저 해당 시점의 수수료율 이력을 등록한 뒤 판매를 등록해야 한다.
+- 반대로 현재 운영 수수료율을 변경하려는 목적이라면 `PATCH /admin/fee-policy`를 사용해야 하며, 같은 목적에 두 API를 혼용하지 않는다.
+
 ### 7.1 현재 수수료율 변경
 - Method: `PATCH`
 - Path: `/admin/fee-policy`
@@ -498,8 +543,8 @@ Request
 - `fee_policy`는 현재 적용할 수수료율을 저장하는 단일 row 설정이다.
 - 요청과 응답의 `feeRatePercent`는 정수 퍼센트 값이며, 서버도 퍼센트 정수로 저장한다.
 - 이 API는 현재 수수료율을 즉시 변경한다.
-- 변경 이후 등록되는 판매는 변경된 수수료율을 `sale_record.fee_rate_percent`에 저장한다.
-- 변경된 현재 수수료율은 이후 판매 등록 시 `sale_record.fee_rate_percent`에 저장될 기준값으로 사용한다.
+- 이 API 호출 시 현재 수수료율(`fee_policy`)을 변경하고, 같은 시점의 수수료율 변경 이력도 함께 기록한다.
+- 변경 이후 시점의 `paidAt`을 가진 판매는 변경된 수수료율을 사용한다.
 
 Response
 
@@ -530,8 +575,9 @@ Request
 비고
 - 요청과 응답의 `feeRatePercent`는 정수 퍼센트 값이며, 서버도 퍼센트 정수로 저장한다.
 - 요청한 수수료율과 변경 적용 시각을 기준으로 `fee_policy_history`를 생성한다.
-- 수수료율 변경 이력은 운영 변경 내역 조회를 위한 기록이다.
-- `fee_policy_history`는 수수료율 변경 내역 조회용이며, 정산 계산은 판매 당시 `sale_record.fee_rate_percent`를 기준으로 한다.
+- 과거 시점 판매 테스트를 위해 별도 이력 등록 API를 제공한다.
+- 판매 등록은 `paidAt` 이하에서 가장 최근의 수수료율 이력을 조회해 수수료율을 결정한다.
+- 이미 저장된 판매의 `sale_record.fee_rate_percent`는 이후 이력 등록으로 변경되지 않는다.
 
 Response
 
@@ -584,14 +630,13 @@ Response
 | `AUTH_005` | `401` | 크리에이터 로그인 ID 또는 비밀번호 불일치 |
 | `AUTH_006` | `401` | 운영자 로그인 ID 또는 비밀번호 불일치 |
 | `AUTH_007` | `404` | 크리에이터를 찾을 수 없음 |
-| `AUTH_008` | `404` | 운영자 계정을 찾을 수 없음 |
 
 ### COURSE
 
 | 코드 | HTTP | 설명 |
 | --- | --- | --- |
 | `COURSE_001` | `404` | 강의를 찾을 수 없음 |
-| `COURSE_002` | `403` | 해당 크리에이터가 소유한 강의가 아님 |
+| `COURSE_002` | `409` | 이미 존재하는 강의 ID |
 
 ### SALE
 
@@ -599,35 +644,31 @@ Response
 | --- | --- | --- |
 | `SALE_001` | `404` | 판매 내역을 찾을 수 없음 |
 | `SALE_002` | `409` | 이미 존재하는 판매 ID |
-| `SALE_005` | `403` | 자신의 판매 내역만 조회할 수 있음 |
+| `SALE_003` | `422` | 결제 일시가 강의 등록 일시보다 빠를 수 없음 |
 
 ### CANCELLATION
 
 | 코드 | HTTP | 설명 |
 | --- | --- | --- |
-| `CANCELLATION_001` | `404` | 취소 대상 판매 내역을 찾을 수 없음 |
-| `CANCELLATION_002` | `409` | 이미 존재하는 취소 ID |
-| `CANCELLATION_003` | `422` | 취소 일시가 원본 판매의 결제 일시보다 빠를 수 없음 |
-| `CANCELLATION_004` | `422` | 환불 금액이 원 결제 금액을 초과함 |
+| `CANCELLATION_001` | `409` | 이미 존재하는 취소 ID |
+| `CANCELLATION_002` | `422` | 취소 일시가 원본 판매의 결제 일시보다 빠를 수 없음 |
+| `CANCELLATION_003` | `422` | 환불 금액이 원 결제 금액을 초과함 |
 
 ### SETTLEMENT
 
 | 코드 | HTTP | 설명 |
 | --- | --- | --- |
-| `SETTLEMENT_003` | `400` | 조회 시작일은 종료일보다 늦을 수 없음 |
-| `SETTLEMENT_004` | `403` | 자신의 정산 정보만 조회할 수 있음 |
-| `SETTLEMENT_005` | `404` | 정산 대상 크리에이터를 찾을 수 없음 |
-| `SETTLEMENT_006` | `409` | 동일 연월 정산이 이미 존재함 |
-| `SETTLEMENT_007` | `400` | 대상 월이 종료되기 전에는 정산을 생성할 수 없음 |
-| `SETTLEMENT_008` | `404` | 정산 정보를 찾을 수 없음 |
-| `SETTLEMENT_009` | `409` | 현재 상태에서는 정산 확정을 할 수 없음 |
-| `SETTLEMENT_010` | `409` | 현재 상태에서는 정산 지급 처리를 할 수 없음 |
+| `SETTLEMENT_001` | `409` | 동일 연월 정산이 이미 존재함 |
+| `SETTLEMENT_002` | `400` | 대상 월이 종료되기 전에는 정산을 생성할 수 없음 |
+| `SETTLEMENT_003` | `404` | 정산 정보를 찾을 수 없음 |
+| `SETTLEMENT_004` | `409` | 현재 상태에서는 정산 확정을 할 수 없음 |
+| `SETTLEMENT_005` | `409` | 현재 상태에서는 정산 지급 처리를 할 수 없음 |
 
 ### FEE_POLICY
 
 | 코드 | HTTP | 설명 |
 | --- | --- | --- |
-| `FEE_POLICY_001` | `404` | 현재 수수료율 정책 또는 수수료율 이력을 찾을 수 없음 |
+| `FEE_POLICY_001` | `404` | 수수료율 정책을 찾을 수 없음 |
 | `FEE_POLICY_002` | `409` | 동일한 변경 기준 시각의 수수료율 이력이 이미 존재함 |
 
 ### COMMON
@@ -638,8 +679,11 @@ Response
 | `COMMON_002` | `500` | 서버 내부 오류 |
 | `COMMON_003` | `404` | 존재하지 않는 엔드포인트 |
 | `COMMON_004` | `405` | 허용되지 않은 HTTP 메서드 |
+| `COMMON_005` | `400` | 조회 시작 값은 조회 종료 값보다 늦을 수 없음 |
 
 ## 9. 구현 메모
 - `Controller -> UseCase -> Service -> Repository` 구조를 따른다.
 - `Controller`는 `Request`, `UseCase`는 `Response`를 기준으로 구현하고, `Service`는 웹 계층 DTO를 직접 의존하지 않는다.
 - `Service`는 다른 `Service`를 의존하지 않고, 여러 작업 조합은 `UseCase`에서 처리한다.
+- 유니크 제약이 있는 생성 API는 사전 조회만으로 끝내지 않고, 저장 시점의 DB 유니크 충돌도 각 도메인 비즈니스 예외로 변환한다.
+- 취소 등록은 `CancellationRecord` 합계를 직접 잠그지 않고, 기준 자원인 `SaleRecord`를 비관적 쓰기 락으로 보호해 누적 환불 검증과 저장을 직렬화한다.

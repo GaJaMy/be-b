@@ -10,6 +10,7 @@
 - 운영자 로그인 API: `POST /admin/login`
 - 예상 정산 조회 API: `GET /creator/settlements/monthly?yearMonth=YYYY-MM`
 - 실제 정산 상태 조회 API: `GET /creator/settlements?from=YYYY-MM&to=YYYY-MM`
+- 운영자 예상 정산 조회 API: `GET /admin/settlements?from=YYYY-MM-dd&to=YYYY-MM-dd`
 - 계산 공통 규칙:
   - 총 판매 금액 = 해당 월 `paidAt` 기준 판매 금액 합계
   - 환불 금액 = 해당 월 `canceledAt` 기준 환불 금액 합계
@@ -17,6 +18,51 @@
   - 플랫폼 수수료 = 수수료율별 순액에 대한 수수료 합계
   - 정산 예정 금액 = 순 판매 금액 - 플랫폼 수수료
   - 플랫폼 수수료는 음수가 될 수 없으므로 최소 0원으로 처리
+
+## 기본 검증 절차
+### 1. 로그인
+크리에이터 시나리오는 먼저 로그인해서 access token을 발급받는다.
+
+Request
+
+```json
+{
+  "loginId": "creator_scenario_1",
+  "password": "qwe123123!"
+}
+```
+
+확인 포인트
+- 응답 `data.accessToken`을 이후 요청의 `Authorization: Bearer {token}` 헤더에 사용한다.
+
+### 2. 월별 예상 정산 조회
+예상 정산 시나리오는 아래 형식으로 조회한다.
+
+```http
+GET /creator/settlements/monthly?yearMonth=2025-04
+Authorization: Bearer {creator-access-token}
+```
+
+확인 포인트
+- 응답의 `grossSalesAmount`
+- 응답의 `refundAmount`
+- 응답의 `netSalesAmount`
+- 응답의 `platformFeeAmount`
+- 응답의 `expectedPayoutAmount`
+- 응답의 `saleCount`, `cancelCount`
+
+### 3. 실제 정산 상태 조회
+실제 정산 상태 시나리오는 아래 형식으로 조회한다.
+
+```http
+GET /creator/settlements?from=2025-01&to=2025-03
+Authorization: Bearer {creator-access-token}
+```
+
+확인 포인트
+- 목록 건수
+- 각 항목의 `status`
+- `yearMonth` 정렬과 포함 범위
 
 ## 수수료율 이력 기준
 아래 이력은 전역 현재 수수료율 변경 이력이다. 각 판매의 `fee_rate_percent`는 판매 시점에 유효한 이력값과 일치하도록 시드를 구성했다.
@@ -29,10 +75,18 @@
 | `2025-06-01 00:00:00` | `35%` |
 | `2025-07-10 00:00:00` | `40%` |
 | `2025-07-20 00:00:00` | `45%` |
+| `2025-08-01 00:00:00` | `20%` |
+
+비고
+- `V3`의 현재 `fee_policy.fee_rate_percent`는 `20`으로 시작하고, `V4`의 마지막 이력도 `2025-08-01 / 20%`로 맞춰진다.
+- 기존 계산 시나리오는 모두 `2025-07` 이전 데이터만 사용하므로, 마지막 `2025-08-01` 이력은 기존 검증 결과에 영향을 주지 않는다.
 
 ## 시나리오 1. 무료 강의 / 무료 환불
 - 계정: `creator_scenario_1`
 - 호출: `GET /creator/settlements/monthly?yearMonth=2025-04`
+- 검증 순서:
+  - `creator_scenario_1 / qwe123123!`로 로그인
+  - 발급받은 access token으로 `GET /creator/settlements/monthly?yearMonth=2025-04` 호출
 - 원천 데이터:
   - 판매
     - `sale-scenario-1`: `amount = 0`, `feeRatePercent = 20`, `paidAt = 2025-04-05 10:00:00`
@@ -50,10 +104,15 @@
   - `netSalesAmount = 0`
   - `platformFeeAmount = 0`
   - `expectedPayoutAmount = 0`
+- 확인 포인트:
+  - 무료 판매와 무료 환불도 건수에는 반영되지만 금액 계산은 모두 0으로 유지되는지 확인한다.
 
 ## 시나리오 2. 동일 판매 다중 취소 누적
 - 계정: `creator_scenario_2`
 - 호출: `GET /creator/settlements/monthly?yearMonth=2025-04`
+- 검증 순서:
+  - `creator_scenario_2 / qwe123123!`로 로그인
+  - `GET /creator/settlements/monthly?yearMonth=2025-04` 호출
 - 원천 데이터:
   - 판매
     - `sale-scenario-2`: `amount = 100000`, `feeRatePercent = 20`, `paidAt = 2025-04-10 09:00:00`
@@ -74,12 +133,17 @@
   - `netSalesAmount = 50000`
   - `platformFeeAmount = 10000`
   - `expectedPayoutAmount = 40000`
+- 확인 포인트:
+  - 하나의 판매에 연결된 여러 취소가 모두 같은 월 환불 금액으로 합산되는지 확인한다.
 
 ## 시나리오 3. 월 경계 판매 / 취소
 - 계정: `creator_scenario_3`
 - 호출:
   - `GET /creator/settlements/monthly?yearMonth=2025-04`
   - `GET /creator/settlements/monthly?yearMonth=2025-05`
+- 검증 순서:
+  - `creator_scenario_3 / qwe123123!`로 로그인
+  - 4월 조회 후 5월 조회를 순서대로 호출
 - 원천 데이터:
   - 판매
     - `sale-scenario-3`: `amount = 70000`, `feeRatePercent = 25`, `paidAt = 2025-04-30 23:59:00`
@@ -100,10 +164,15 @@
 - 기대 결과:
   - 4월은 판매만 반영
   - 5월은 취소만 반영
+- 확인 포인트:
+  - `paidAt`과 `canceledAt`이 서로 다른 월이면 각 월에 분리 반영되는지 확인한다.
 
 ## 시나리오 4. 서로 다른 수수료율 판매 혼합
 - 계정: `creator_scenario_4`
 - 호출: `GET /creator/settlements/monthly?yearMonth=2025-05`
+- 검증 순서:
+  - `creator_scenario_4 / qwe123123!`로 로그인
+  - `GET /creator/settlements/monthly?yearMonth=2025-05` 호출
 - 원천 데이터:
   - 판매
     - `sale-scenario-4`: `amount = 50000`, `feeRatePercent = 25`, `paidAt = 2025-05-03 12:00:00`
@@ -125,10 +194,15 @@
   - `netSalesAmount = 90000`
   - `platformFeeAmount = 24500`
   - `expectedPayoutAmount = 65500`
+- 확인 포인트:
+  - 단일 수수료율이 아니라 수수료율 그룹별 순액 합산으로 수수료가 계산되는지 확인한다.
 
 ## 시나리오 5. 실제 정산 상태 조회
 - 계정: `creator_scenario_5`
 - 호출: `GET /creator/settlements?from=2025-01&to=2025-03`
+- 검증 순서:
+  - `creator_scenario_5 / qwe123123!`로 로그인
+  - `GET /creator/settlements?from=2025-01&to=2025-03` 호출
 - 원천 데이터:
   - `settlement-scenario-1`: `2025-01`, `PENDING`
   - `settlement-scenario-2`: `2025-02`, `CONFIRMED`
@@ -136,12 +210,17 @@
 - 기대 결과:
   - 목록에 3건이 조회
   - 상태가 각각 `PENDING`, `CONFIRMED`, `PAID`
+- 확인 포인트:
+  - 실제 정산 관리 API와 예상 정산 조회 API가 분리되어 있음을 함께 확인한다.
 
 ## 시나리오 6. 과거 판매 수수료율 유지 + 같은 월 신규 판매
 - 계정: `creator_scenario_6`
 - 호출:
   - `GET /creator/settlements/monthly?yearMonth=2025-05`
   - `GET /creator/settlements/monthly?yearMonth=2025-06`
+- 검증 순서:
+  - `creator_scenario_6 / qwe123123!`로 로그인
+  - 5월 조회 후 6월 조회를 순서대로 호출
 - 원천 데이터:
   - 4월 판매
     - `sale-scenario-6`: `50000`, `20%`, `paidAt = 2025-04-10 13:00:00`
@@ -169,10 +248,17 @@
   - 정산 예정 금액 = `-20000`
 - 의미:
   - 5월 / 6월의 현재 수수료율이 달라도 취소는 원본 판매 수수료율을 따른다.
+- 확인 포인트:
+  - 5월 환불은 `sale-scenario-6`의 `20%`
+  - 6월 환불은 `sale-scenario-7`의 `25%`
+  를 따라가며, 조회 시점 현재 수수료율과 무관하게 계산되는지 확인한다.
 
 ## 시나리오 7. 환불만 있는 월
 - 계정: `creator_scenario_7`
 - 호출: `GET /creator/settlements/monthly?yearMonth=2025-05`
+- 검증 순서:
+  - `creator_scenario_7 / qwe123123!`로 로그인
+  - `GET /creator/settlements/monthly?yearMonth=2025-05` 호출
 - 원천 데이터:
   - 4월 판매
     - `sale-scenario-9`: `30000`, `20%`, `paidAt = 2025-04-08 11:00:00`
@@ -187,10 +273,15 @@
 - 기대 결과:
   - `platformFeeAmount = 0`
   - `expectedPayoutAmount = -10000`
+- 확인 포인트:
+  - 환불만 있는 월에는 수수료가 음수가 되지 않고 0원으로 처리되는지 확인한다.
 
 ## 시나리오 8. 플랫폼 수수료는 양수, 정산 예정 금액은 음수
 - 계정: `creator_scenario_8`
 - 호출: `GET /creator/settlements/monthly?yearMonth=2025-05`
+- 검증 순서:
+  - `creator_scenario_8 / qwe123123!`로 로그인
+  - `GET /creator/settlements/monthly?yearMonth=2025-05` 호출
 - 원천 데이터:
   - 4월 판매
     - `sale-scenario-10`: `30000`, `20%`, `paidAt = 2025-04-05 09:00:00`
@@ -210,10 +301,15 @@
 - 기대 결과:
   - `platformFeeAmount > 0`
   - `expectedPayoutAmount < 0`
+- 확인 포인트:
+  - 같은 월 신규 판매로 양수 수수료가 생기더라도, 환불이 더 크면 최종 정산 예정 금액은 음수가 될 수 있음을 확인한다.
 
 ## 시나리오 9. 판매만 있는 순수 정산
 - 계정: `creator_scenario_9`
 - 호출: `GET /creator/settlements/monthly?yearMonth=2025-06`
+- 검증 순서:
+  - `creator_scenario_9 / qwe123123!`로 로그인
+  - `GET /creator/settlements/monthly?yearMonth=2025-06` 호출
 - 원천 데이터:
   - `sale-scenario-12`: `20000`, `35%`, `paidAt = 2025-06-05 10:00:00`
   - `sale-scenario-13`: `30000`, `35%`, `paidAt = 2025-06-18 11:00:00`
@@ -223,10 +319,19 @@
   - 순 판매 금액 = `50000`
   - 플랫폼 수수료 = `50000 * 35% = 17500`
   - 정산 예정 금액 = `50000 - 17500 = 32500`
+- 기대 결과:
+  - `grossSalesAmount = 50000`
+  - `refundAmount = 0`
+  - `netSalesAmount = 50000`
+  - `platformFeeAmount = 17500`
+  - `expectedPayoutAmount = 32500`
 
 ## 시나리오 10. 순 판매 금액이 정확히 0원
 - 계정: `creator_scenario_10`
 - 호출: `GET /creator/settlements/monthly?yearMonth=2025-06`
+- 검증 순서:
+  - `creator_scenario_10 / qwe123123!`로 로그인
+  - `GET /creator/settlements/monthly?yearMonth=2025-06` 호출
 - 원천 데이터:
   - 판매
     - `sale-scenario-14`: `10000`, `35%`, `paidAt = 2025-06-08 10:30:00`
@@ -238,10 +343,19 @@
   - 순 판매 금액 = `0`
   - 플랫폼 수수료 = `0`
   - 정산 예정 금액 = `0`
+- 기대 결과:
+  - `grossSalesAmount = 10000`
+  - `refundAmount = 10000`
+  - `netSalesAmount = 0`
+  - `platformFeeAmount = 0`
+  - `expectedPayoutAmount = 0`
 
 ## 시나리오 11. 수수료 소수점 올림
 - 계정: `creator_scenario_11`
 - 호출: `GET /creator/settlements/monthly?yearMonth=2025-06`
+- 검증 순서:
+  - `creator_scenario_11 / qwe123123!`로 로그인
+  - `GET /creator/settlements/monthly?yearMonth=2025-06` 호출
 - 원천 데이터:
   - `sale-scenario-15`: `10001`, `35%`, `paidAt = 2025-06-12 14:00:00`
 - 계산:
@@ -251,10 +365,16 @@
   - 플랫폼 수수료 = `10001 * 35% = 3500.35`
   - 올림 적용 후 플랫폼 수수료 = `3501`
   - 정산 예정 금액 = `10001 - 3501 = 6500`
+- 기대 결과:
+  - `platformFeeAmount = 3501`
+  - `expectedPayoutAmount = 6500`
 
 ## 시나리오 12. 여러 수수료율 판매와 환불이 함께 있는 복합 정산
 - 계정: `creator_scenario_12`
 - 호출: `GET /creator/settlements/monthly?yearMonth=2025-07`
+- 검증 순서:
+  - `creator_scenario_12 / qwe123123!`로 로그인
+  - `GET /creator/settlements/monthly?yearMonth=2025-07` 호출
 - 원천 데이터:
   - 판매
     - `sale-scenario-16`: `30000`, `35%`, `paidAt = 2025-06-05 09:00:00`
@@ -278,12 +398,22 @@
     - `45%` 그룹: `30000`
   - 플랫폼 수수료 = `0 + (35000 * 40%) + (30000 * 45%) = 0 + 14000 + 13500 = 27500`
   - 정산 예정 금액 = `55000 - 27500 = 27500`
+- 기대 결과:
+  - `grossSalesAmount = 70000`
+  - `refundAmount = 15000`
+  - `netSalesAmount = 55000`
+  - `platformFeeAmount = 27500`
+  - `expectedPayoutAmount = 27500`
 
 ## 운영자 확인 포인트
 - 계정: `admin-1`
 - 호출:
   - 예상 정산 집계: `GET /admin/settlements?from=2025-04-01&to=2025-07-31`
   - 실제 정산 상태 조회: `GET /admin/settlement-management?from=2025-01&to=2025-03`
+- 검증 순서:
+  - `admin-1 / qwe123123!`로 로그인
+  - 먼저 `GET /admin/settlements?from=2025-04-01&to=2025-07-31` 호출
+  - 이후 `GET /admin/settlement-management?from=2025-01&to=2025-03` 호출
 - 확인 포인트:
   - 예상 정산 집계에서는 위 시나리오들의 월별 계산 결과가 크리에이터별로 반영된다.
   - 실제 정산 상태 조회에서는 `creator_scenario_5`의 `PENDING`, `CONFIRMED`, `PAID` 정산 3건을 확인할 수 있다.

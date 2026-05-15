@@ -7,6 +7,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "course")
 @Getter
@@ -24,12 +26,16 @@ public class Course extends BaseEntity {
     @Column(name = "title", length = 200, nullable = false)
     private String title;
 
-    public static Course create(String id, Creator creator, String title) {
+    @Column(name = "registered_at", nullable = false)
+    private LocalDateTime registeredAt;
+
+    public static Course create(String id, Creator creator, String title, LocalDateTime registeredAt) {
         Course course = new Course();
 
         course.id = id;
         course.creator = creator;
         course.title = title;
+        course.registeredAt = registeredAt;
 
         return course;
     }

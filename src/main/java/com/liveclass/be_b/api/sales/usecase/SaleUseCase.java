@@ -9,7 +9,7 @@ import com.liveclass.be_b.domain.creator.entity.Creator;
 import com.liveclass.be_b.domain.sale.entity.SaleRecord;
 import com.liveclass.be_b.service.course.CourseService;
 import com.liveclass.be_b.service.creator.CreatorService;
-import com.liveclass.be_b.service.feepolicy.FeePolicyService;
+import com.liveclass.be_b.service.feepolicy.FeePolicyHistoryService;
 import com.liveclass.be_b.service.sale.SaleRecordService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -25,21 +25,22 @@ public class SaleUseCase {
     private final SaleRecordService saleRecordService;
     private final CourseService courseService;
     private final CreatorService creatorService;
-    private final FeePolicyService feePolicyService;
+    private final FeePolicyHistoryService feePolicyHistoryService;
 
     @Transactional
     public SaleRegisterResponse registerSale(SaleRegisterRequest request) {
 
-        Course course = courseService.findCourse(request.getCourseId());
-        int currentFeePolicyRatePercent = feePolicyService.getCurrentFeePolicyRatePercent();
+        LocalDateTime paidAt = DateTimeUtil.toKstLocalDateTime(request.getPaidAt());
+        Course course = courseService.findCourseForSale(request.getCourseId(), paidAt);
+        int feeRatePercent = feePolicyHistoryService.findFeeRatePercentByAppliedAt(paidAt);
 
         String saleId = saleRecordService.registerSale(
                 course,
                 request.getSaleId(),
                 request.getStudentId(),
                 request.getAmount(),
-                currentFeePolicyRatePercent,
-                DateTimeUtil.toKstLocalDateTime(request.getPaidAt())
+                feeRatePercent,
+                paidAt
         );
 
         return SaleRegisterResponse.of(saleId);
@@ -47,6 +48,7 @@ public class SaleUseCase {
 
     @Transactional
     public List<SaleQueryResponse> querySale(String creatorId, LocalDate from, LocalDate to) {
+        DateTimeUtil.validateDateRange(from, to);
         Creator creator = creatorService.findCreator(creatorId);
 
         LocalDateTime fromDateTime = DateTimeUtil.startOfDay(from);

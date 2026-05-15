@@ -33,6 +33,7 @@
 | `id` | `varchar(50)` | Y | N | N | 강의 ID |
 | `creator_id` | `varchar(50)` | N | Y | N | 소유 크리에이터 ID |
 | `title` | `varchar(200)` | N | N | N | 강의명 |
+| `registered_at` | `datetime` | N | N | N | 강의 등록 시각 |
 | `created_at` | `datetime` | N | N | N | 생성 일시 |
 | `updated_at` | `datetime` | N | N | N | 수정 일시 |
 
@@ -125,10 +126,11 @@
 | 정산 유니크 | `settlement`는 `creator_id + settlement_year_month` 조합이 유니크여야 한다 |
 | 정산 상태 | `status`는 `PENDING -> CONFIRMED -> PAID` 순서만 허용한다 |
 | 현재 수수료율 | `fee_policy`는 현재 적용할 수수료율 정책을 저장하며, 애플리케이션에서 단일 row로 관리한다 |
-| 판매 수수료율 스냅샷 | 판매 등록 시점의 `fee_policy.fee_rate_percent`를 `sale_record.fee_rate_percent`에 저장한다 |
+| 판매 수수료율 스냅샷 | 판매 등록 시 `paid_at` 이하에서 가장 최근의 `fee_policy_history.effective_started_at` 이력을 찾아 `sale_record.fee_rate_percent`에 저장한다 |
 | 수수료율 적용 | 판매분은 해당 `sale_record.fee_rate_percent`를 적용하고, 환불분은 원본 `sale_record.fee_rate_percent`를 적용한다 |
 | 수수료율 변경 시점 | 운영자가 현재 수수료율을 변경하면 변경 시점부터 즉시 적용되며, 이후 등록되는 판매부터 새 수수료율을 사용한다 |
 | 수수료율 이력 | `fee_policy_history`는 현재 수수료율 변경 이력을 조회하기 위한 기록이며, 정산 계산의 직접 FK 기준으로 사용하지 않는다 |
+| 취소 등록 동시성 | 같은 `sale_record_id` 기준의 동시 취소 등록은 `sale_record` row에 비관적 쓰기 락을 걸어 누적 환불 검증과 저장을 직렬화한다 |
 
 ## 비고
 - `sale_record.creator_id`와 `cancellation_record.creator_id`는 정산 조회 성능과 단순한 집계를 위해 중복 보관한다.
@@ -142,3 +144,4 @@
 - `fee_policy_history`는 수수료율 변경 이력을 남기기 위한 테이블이며, `settlement`와 직접 관계를 맺지 않는다.
 - 플랫폼 수수료는 음수가 될 수 없으므로 최소 0원으로 처리한다.
 - `expected_payout_amount`가 음수인 경우, 이는 해당 정산에서 지급이 아니라 차감으로 처리되어야 할 금액이 발생했음을 의미한다.
+- 강의, 판매, 취소, 수수료율 이력, 정산 생성처럼 유니크 제약이 있는 생성은 동시 요청 시 DB 유니크 충돌이 발생할 수 있으므로, 애플리케이션에서 이를 각 도메인 비즈니스 예외로 변환한다.

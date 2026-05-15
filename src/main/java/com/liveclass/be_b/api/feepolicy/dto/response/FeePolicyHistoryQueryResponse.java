@@ -1,5 +1,7 @@
 package com.liveclass.be_b.api.feepolicy.dto.response;
 
+import com.liveclass.be_b.common.util.DateTimeUtil;
+import com.liveclass.be_b.domain.feepolicy.entity.FeePolicyHistory;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,4 +22,12 @@ public class FeePolicyHistoryQueryResponse {
     private OffsetDateTime effectiveStartedAt;
     @Schema(description = "적용 수수료율", example = "30")
     private int feeRatePercent;
+
+    public static FeePolicyHistoryQueryResponse from(FeePolicyHistory feePolicyHistory) {
+        return FeePolicyHistoryQueryResponse.builder()
+                .feePolicyHistoryId(feePolicyHistory.getId())
+                .effectiveStartedAt(DateTimeUtil.toKstOffsetDateTime(feePolicyHistory.getEffectiveStartedAt()))
+                .feeRatePercent(feePolicyHistory.getFeeRatePercent())
+                .build();
+    }
 }

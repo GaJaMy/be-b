@@ -7,6 +7,7 @@ import com.liveclass.be_b.domain.settlement.entity.Settlement;
 import com.liveclass.be_b.api.settlement.dto.internal.SettlementMetrics;
 import com.liveclass.be_b.repository.settlement.SettlementRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,13 +25,6 @@ public class SettlementService {
 
     private final SettlementRepository settlementRepository;
 
-    @Transactional(readOnly = true)
-    public void validateNotExists(Creator creator, YearMonth yearMonth) {
-        if (settlementRepository.existsByCreatorAndYearMonth(creator, yearMonth.toString())) {
-            throw new BusinessException(ErrorCode.ALREADY_EXISTS_SETTLEMENT);
-        }
-    }
-
     @Transactional
     public Settlement createSettlement(
             Creator creator,
@@ -38,24 +32,32 @@ public class SettlementService {
             SettlementMetrics settlementMetrics,
             LocalDateTime requestedAt
     ) {
+        if (settlementRepository.existsByCreatorAndYearMonth(creator, yearMonth.toString())) {
+            throw new BusinessException(ErrorCode.ALREADY_EXISTS_SETTLEMENT);
+        }
+
         String uuid = UUID.randomUUID().toString();
         String settlementId = String.format("%s-%s", SETTLEMENT_ID_PREFIX, uuid);
 
-        Settlement settlement = Settlement.create(
-                settlementId,
-                creator,
-                yearMonth.toString(),
-                settlementMetrics.grossSalesAmount(),
-                settlementMetrics.refundAmount(),
-                settlementMetrics.netSalesAmount(),
-                settlementMetrics.platformFeeAmount(),
-                settlementMetrics.expectedPayoutAmount(),
-                settlementMetrics.saleCount(),
-                settlementMetrics.cancelCount(),
-                requestedAt
-        );
+        try {
+            Settlement settlement = Settlement.create(
+                    settlementId,
+                    creator,
+                    yearMonth.toString(),
+                    settlementMetrics.grossSalesAmount(),
+                    settlementMetrics.refundAmount(),
+                    settlementMetrics.netSalesAmount(),
+                    settlementMetrics.platformFeeAmount(),
+                    settlementMetrics.expectedPayoutAmount(),
+                    settlementMetrics.saleCount(),
+                    settlementMetrics.cancelCount(),
+                    requestedAt
+            );
 
-        return settlementRepository.save(settlement);
+            return settlementRepository.save(settlement);
+        } catch (DataIntegrityViolationException e) {
+            throw new BusinessException(ErrorCode.ALREADY_EXISTS_SETTLEMENT);
+        }
     }
 
     @Transactional(readOnly = true)
